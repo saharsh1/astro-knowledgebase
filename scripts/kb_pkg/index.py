@@ -1,18 +1,25 @@
 """Incremental builder for the knowledge base's search index.
 
 Indexed sources:
-- notes   every .md in the note folders of conventions.yaml (source_type "note")
+- notes   every .md in live/ (arms and shared folders) and keeper/generated/
+          (source_type "note"; "docs" for the Gaia data-model and documentation notes)
 - papers  the PDF of every paper note (frontmatter `pdf:`, in keeper/pdfs/), under
           the paper note's name (source_type "paper")
 - code    the checkouts in external/ (scripts/fetch_code.py): .py and .jl files by
           function/class, notebooks by cells, README/docs .md by heading
           (source_type "code"; author = repository name)
 
+Labels: every passage carries `arms`, the arms it belongs to ('|a|b|', or '' for code
+and documentation). A note: its folder's arm plus its `arms:`. A paper (note and PDF): its
+`arms:` plus every arm whose notes link to it. When only the labels of a source change
+(e.g. a new note cites a paper), its passages are relabelled without embedding them again.
+
 Usage:
     python -m kb_pkg.index [--rebuild] [--device auto|cpu|mps|cuda]   (from scripts/)
 """
 import argparse
 import hashlib
+import re
 from pathlib import Path
 
 import yaml
@@ -23,6 +30,8 @@ from .embed import Embedder
 from .store import Store
 
 CODE_SUFFIXES = {".py", ".ipynb", ".jl"}
+DOCS_TYPES = {"gaia-table", "gaia-section"}          # note types indexed as source_type "docs"
+WIKILINK = re.compile(r"(?<!\!)\[\[([^\]|#]+)")
 DOC_SUFFIXES = {".md", ".rst", ".txt"}
 
 
@@ -40,17 +49,48 @@ def _frontmatter(p: Path) -> dict:
         return {}
 
 
+def _arms_list(fm: dict) -> list[str]:
+    v = fm.get("arms") or []
+    return [str(a) for a in (v if isinstance(v, list) else [v])]
+
+
+def labels(arms) -> str:
+    """'|a|b|' for a set of arms, '' for none: the stored form, which LIKE '%|a|%' matches."""
+    arms = sorted(a for a in arms if a)
+    return "|" + "|".join(arms) + "|" if arms else ""
+
+
 def discover() -> dict[str, tuple[str, Path, dict]]:
-    """source_id -> (kind, path, extra) for every file to index."""
+    """source_id -> (kind, path, extra) for every file to index.
+    extra['arms'] is the label string and extra['stype'] the source type of a note."""
     found: dict[str, tuple[str, Path, dict]] = {}
+    known_arms = set(config.arms())
+    notes: list[tuple[Path, dict, str | None]] = []
     for folder in config.note_folders():
         for p in sorted(folder.rglob("*.md")):
-            rel = p.relative_to(config.ROOT).as_posix()
-            found[rel] = ("note", p, {})
-            if folder.name == "papers" and p.parent == folder:
-                pdf = _frontmatter(p).get("pdf") or ""
-                if pdf and (config.ROOT / pdf).exists():
-                    found[p.stem] = ("paper", config.ROOT / pdf, {})
+            notes.append((p, _frontmatter(p), config.arm_of(p)))
+
+    papers = {p.stem: p for p, fm, _ in notes if fm.get("type") == "paper"}
+    cited: dict[str, set[str]] = {s: set() for s in papers}          # paper stem -> arms citing it
+    for p, fm, arm in notes:
+        if arm:
+            for target in WIKILINK.findall(p.read_text(encoding="utf-8", errors="replace")):
+                target = target.strip()
+                if target in cited:
+                    cited[target].add(arm)
+
+    for p, fm, arm in notes:
+        rel = p.relative_to(config.ROOT).as_posix()
+        arms = {arm, *_arms_list(fm)} if arm else set(_arms_list(fm))
+        if fm.get("type") == "paper":
+            arms |= cited.get(p.stem, set())
+        arms &= known_arms
+        stype = "docs" if fm.get("type") in DOCS_TYPES else "note"
+        found[rel] = ("note", p, {"arms": labels(arms), "stype": stype})
+        if fm.get("type") == "paper":
+            pdf = fm.get("pdf") or ""
+            if pdf and (config.ROOT / pdf).exists():
+                found[p.stem] = ("paper", config.ROOT / pdf, {"arms": labels(arms), "stype": "paper"})
     demos = config.ROOT / "demos"                     # the knowledge base's own notebooks
     for p in sorted(demos.glob("*.ipynb")) if demos.exists() else []:
         rel = p.relative_to(demos).as_posix()
@@ -81,7 +121,14 @@ def chunks_for(source_id: str, kind: str, path: Path, extra: dict, count=None):
         for c in out:
             c.source_type, c.title, c.author = "code", extra["repo"], extra["repo"]
         return out
-    return chunk.chunk_note(source_id, source_id, text, count=count)
+    out = chunk.chunk_note(source_id, source_id, text, count=count)
+    for c in out:
+        c.source_type = extra.get("stype", "note")
+    return out
+
+
+def label_key(extra: dict) -> str:
+    return f"{extra.get('stype', '')};{extra.get('arms', '')}"
 
 
 def build(store, embedder, *, rebuild=False, progress=False) -> dict:
@@ -98,16 +145,23 @@ def build(store, embedder, *, rebuild=False, progress=False) -> dict:
             bar = tqdm(total=len(found), desc="indexing", unit="file")
         except ImportError:
             bar = None
-    indexed = skipped = total_chunks = 0
+    indexed = skipped = relabelled = total_chunks = 0
     new_manifest: dict[str, str] = {}
     try:
         for source_id, (kind, path, extra) in found.items():
-            h = file_hash(path)
-            new_manifest[source_id] = h
-            if manifest.get(source_id) == h:
+            h, key = file_hash(path), label_key(extra)
+            new_manifest[source_id] = f"{h} {key}"
+            old_h, _, old_key = manifest.get(source_id, "").partition(" ")
+            if old_h == h and old_key == key:
                 skipped += 1
+            elif old_h == h:                               # same text, new labels: no embedding
+                store.relabel(source_id, arms=extra.get("arms", ""),
+                              source_type=extra.get("stype") or ("code" if kind in ("code", "codedoc") else kind))
+                relabelled += 1
             else:
                 chunks = chunks_for(source_id, kind, path, extra, count)
+                for c in chunks:
+                    c.arms = extra.get("arms", "")
                 if chunks:
                     vectors = embedder.embed_passages([c.text for c in chunks])
                     store.upsert(chunks, vectors)
@@ -123,7 +177,8 @@ def build(store, embedder, *, rebuild=False, progress=False) -> dict:
     if deleted:
         store.purge(deleted)
     store.write_manifest(new_manifest)
-    return {"indexed": indexed, "skipped": skipped, "purged": len(deleted), "chunks": total_chunks}
+    return {"indexed": indexed, "relabelled": relabelled, "skipped": skipped,
+            "purged": len(deleted), "chunks": total_chunks}
 
 
 def main(argv=None) -> None:

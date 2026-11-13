@@ -1,7 +1,8 @@
 """MCP server for the astro knowledge base (stdio).
 
 Tools:
-- search_kb        passages by meaning from notes, paper PDFs and the group's code
+- search_kb        passages by meaning from notes, paper PDFs, the group's code and the
+                   Gaia documentation; optional filters arm=, source_type=, author=
 - get_neighbors    the passages around a hit
 - lookup_column    exact record of one Gaia archive column (never a guess)
 - find_columns     exact list of columns whose name or description contains a text
@@ -47,18 +48,20 @@ def _format_hit(hit: dict) -> dict:
         source = hit.get("note_path") or hit["source_id"]
     return {"text": hit["text"], "source": source, "where": _page_label(hit),
             "section": hit.get("section"), "source_id": hit["source_id"], "ordinal": hit.get("ordinal"),
-            "source_type": hit["source_type"], "score": hit.get("score")}
+            "source_type": hit["source_type"], "arms": hit.get("arms") or [], "score": hit.get("score")}
 
 
 @mcp.tool()
 def search_kb(query: str, k: int | None = None, source_type: str | None = None,
-              author: str | None = None) -> list[dict]:
-    """Search the astro knowledge base by meaning: notes (incl. the Gaia
-    data-model notes and code cards), the curated papers' PDFs, and the group's
-    code. Filter with source_type='note'|'paper'|'code'; author='<surname>' for
-    papers or '<repository>' for code (e.g. 'orblet'). Cite as 'source, where'.
-    For exact column names, types, units or flags use lookup_column instead."""
-    hits = _get_searcher().search(query, k=k, source_type=source_type, author=author)
+              author: str | None = None, arm: str | None = None) -> list[dict]:
+    """Search the astro knowledge base by meaning. With no filter: everything (all arms'
+    notes, the curated papers' PDFs, the group's code, the Gaia documentation).
+    arm='<arm>' (e.g. 'binary-stars', 'milky-way'): that arm's notes and the papers linked
+    to it. source_type='note'|'paper'|'code'|'docs' ('docs' = Gaia data-model and
+    documentation notes). author='<surname>' for papers or '<repository>' for code.
+    Filters combine. Cite as 'source, where'. For exact column names, types, units or
+    flags use lookup_column instead."""
+    hits = _get_searcher().search(query, k=k, source_type=source_type, author=author, arm=arm)
     return [_format_hit(h) for h in hits]
 
 

@@ -10,11 +10,11 @@ class Searcher:
         self.embedder = embedder
         self.reranker = reranker
 
-    def search(self, query, k=None, *, source_type=None, author=None) -> list[dict]:
+    def search(self, query, k=None, *, source_type=None, author=None, arm=None) -> list[dict]:
         k = k or config.default_k()
         fetch = max(k, 40) if self.reranker else k
         vec = self.embedder.embed_query(query)
-        hits = self.store.search(vec, fetch, source_type=source_type, author=author)
+        hits = self.store.search(vec, fetch, source_type=source_type, author=author, arm=arm)
         if self.reranker and hits:
             scores = self.reranker.predict([(query, h["text"]) for h in hits])
             for h, s in zip(hits, scores):

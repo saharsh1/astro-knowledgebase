@@ -23,6 +23,7 @@ def _to_row(c: Chunk, vector: list[float]) -> dict:
         "section": c.section or "",
         "note_path": c.note_path or "",
         "ordinal": int(c.chunk_id.rsplit("#", 1)[1]),
+        "arms": c.arms or "",
     }
 
 
@@ -44,6 +45,7 @@ def _from_row(row: dict) -> dict:
         "page_end": n(row["page_end"]),
         "section": s(row["section"]),
         "note_path": s(row["note_path"]),
+        "arms": [a for a in (row.get("arms") or "").split("|") if a],
         "score": row.get("_distance"),
     }
 
@@ -56,7 +58,11 @@ class Store:
 
     def _table(self, sample_row: dict | None = None):
         if _TABLE in self.db.table_names():
-            return self.db.open_table(_TABLE)
+            tbl = self.db.open_table(_TABLE)
+            if "arms" not in tbl.schema.names:
+                raise RuntimeError(f"the index in {self.index_dir} has no arm labels (built before "
+                                   "2026-11-13): rebuild it with  python -m kb_pkg.index --rebuild")
+            return tbl
         if sample_row is None:
             return None
         return self.db.create_table(_TABLE, data=[sample_row])
@@ -81,7 +87,8 @@ class Store:
         quoted = ", ".join("'" + sid.replace("'", "''") + "'" for sid in source_ids)
         tbl.delete(f"source_id IN ({quoted})")
 
-    def search(self, vector, k, *, source_type=None, author=None) -> list[dict]:
+    def search(self, vector, k, *, source_type=None, author=None, arm=None) -> list[dict]:
+        """Nearest passages. arm: one arm or a list (any of them); source_type, author: exact."""
         tbl = self._table()
         if tbl is None:
             return []
@@ -91,9 +98,21 @@ class Store:
             clauses.append("source_type = '" + source_type.replace("'", "''") + "'")
         if author:
             clauses.append("author = '" + author.replace("'", "''") + "'")
+        if arm:
+            arms = [arm] if isinstance(arm, str) else list(arm)
+            clauses.append("(" + " OR ".join("arms LIKE '%|" + a.replace("'", "''").replace("%", "")
+                                             + "|%'" for a in arms) + ")")
         if clauses:
-            q = q.where(" AND ".join(clauses))
+            q = q.where(" AND ".join(clauses), prefilter=True)   # filter first, then take the k nearest
         return [_from_row(r) for r in q.to_list()]
+
+    def relabel(self, source_id: str, *, arms: str, source_type: str) -> None:
+        """Change the labels of a source's passages without embedding them again."""
+        tbl = self._table()
+        if tbl is None:
+            return
+        sid = source_id.replace("'", "''")
+        tbl.update(where=f"source_id = '{sid}'", values={"arms": arms, "source_type": source_type})
 
     def neighbors(self, source_id: str, ordinal_range: range) -> list[dict]:
         tbl = self._table()

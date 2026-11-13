@@ -14,3 +14,4 @@ class Chunk:
     page_end: int | None
     section: str | None
     note_path: str | None
+    arms: str = ""            # '|binary-stars|milky-way|' or '' (shared: code, docs)

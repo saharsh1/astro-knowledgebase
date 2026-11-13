@@ -11,10 +11,10 @@ which the Seafile app syncs into `live/` (notes) and `keeper/` (data).
 **Status (2026-11-13): under construction.**
 
 - Done: rules, conventions, templates, checker, hooks; the skills `/publish`,
-  `/request-paper`, `/ingest`, `/lesson`, `/digest` and their scripts.
-- To come: `/consolidate`, `/resolve`, `/sync`, `/share`, `/publish-index`; arm and
-  docs labels in the search index; `setup.sh` and `doctor.py`; the snapshot script; the import of the
-  binary stars knowledge base.
+  `/request-paper`, `/ingest`, `/lesson`, `/digest` and their scripts; arm and docs
+  labels in the search index, with `arm=` and `source_type="docs"` filters.
+- To come: `/consolidate`, `/resolve`, `/sync`, `/share`, `/publish-index`; `setup.sh`
+  and `doctor.py`; the snapshot script; the import of the binary stars knowledge base.
 
 The design is in `docs/design/`.
 
@@ -24,4 +24,5 @@ Check the skeleton and run the tests:
 python scripts/check_vault.py
 python scripts/test_check_vault.py
 python scripts/test_notes_flow.py
+python scripts/test_index_labels.py   # needs the full environment (lancedb, pymupdf)
 ```
