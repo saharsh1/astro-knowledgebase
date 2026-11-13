@@ -17,3 +17,4 @@ jobs:
       # No live/ on GitHub: this checks the skeleton (conventions, templates) only.
       - run: python scripts/check_vault.py
       - run: python scripts/test_check_vault.py
+      - run: python scripts/test_notes_flow.py

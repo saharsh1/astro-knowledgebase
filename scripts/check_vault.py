@@ -226,9 +226,10 @@ def main() -> int:
         dest = (ROOT / args.dest).resolve()
         rel = f"{args.draft} (as {args.dest})"
         if dest.exists():
-            errors.append(f"{args.dest} exists already: never overwrite a note (one writer per file)")
+            errors.append(f"{rel}: {args.dest} exists already — never overwrite a note (one writer per file)")
         elif dest.stem in stems:
-            errors.append(f"a note named '{dest.stem}' exists already: {by_stem[dest.stem][0].relative_to(ROOT)}")
+            errors.append(f"{rel}: a note named '{dest.stem}' exists already "
+                          f"({by_stem[dest.stem][0].relative_to(ROOT)})")
         check_note(v, dest, rel, (ROOT / args.draft).read_text(encoding="utf-8"), dest,
                    stems | {dest.stem}, not missing, errors, warnings)
         checked = 1
