@@ -236,6 +236,8 @@ def main() -> int:
     ap.add_argument("--keeper", action="store_true", help="check keeper/locks/ against the files")
     ap.add_argument("--draft", type=Path, help="check one draft file (e.g. in outbox/)")
     ap.add_argument("--dest", type=Path, help="with --draft: where /publish would put it")
+    ap.add_argument("--skeleton", action="store_true",
+                    help="check the rules and templates only, not the notes (as the GitHub check does)")
     args = ap.parse_args()
 
     conv = yaml.safe_load((ROOT / "conventions.yaml").read_text())
@@ -246,8 +248,8 @@ def main() -> int:
     warnings: list[str] = []
     check_skeleton(conv, errors)
 
-    notes = v.notes()
-    missing = v.missing_arms() if v.live.exists() else []
+    notes = [] if args.skeleton else v.notes()
+    missing = v.missing_arms() if v.live.exists() and not args.skeleton else []
     if v.live.exists() and missing:
         warnings.append(f"arms not synced on this machine: {', '.join(missing)} (links into them are warnings)")
     by_stem: dict[str, list[Path]] = defaultdict(list)
@@ -332,7 +334,7 @@ def main() -> int:
         print("warning:", w)
     for e in errors:
         print("error:", e)
-    where = "draft" if args.draft else ("notes" if v.live.exists() else "notes (no live/ here: skeleton only)")
+    where = "draft" if args.draft else ("notes" if v.live.exists() and not args.skeleton else "notes (skeleton only)")
     print(f"{checked} {where} checked, rules version {conv['version']}: "
           f"{len(errors)} error(s), {len(warnings)} warning(s)")
     return 1 if errors else 0

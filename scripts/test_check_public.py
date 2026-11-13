@@ -28,7 +28,7 @@ def main() -> int:
         root = Path(t) / "repo"
         (root / "scripts").mkdir(parents=True)
         shutil.copy(REPO / "scripts" / "check_public.py", root / "scripts")
-        (root / "README.md").write_text("Contact: alice@example.org\n")
+        (root / "README.md").write_text("Contact: alice@example.org\nClone: git@github.com:o/r.git\n")
         (root / "scripts" / "tool.py").write_text("print('hello')\n")
         subprocess.run(["git", "init", "-q", str(root)], check=True)
         subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
@@ -39,7 +39,7 @@ def main() -> int:
             return r.returncode, r.stdout + r.stderr
 
         code, out = check()
-        expect("a clean skeleton passes", code == 0, out)
+        expect("a clean skeleton passes (example.org and the GitHub SSH address are allowed)", code == 0, out)
 
         token = "ghp_" + "a" * 36
         bad = {

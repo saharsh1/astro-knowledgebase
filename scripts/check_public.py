@@ -51,7 +51,8 @@ SECRETS = [
      "a key or token assigned in the text"),
 ]
 EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}\b")
-EMAIL_OK = re.compile(r"@(example\.(org|com|net)|users\.noreply\.github\.com|anthropic\.com)$", re.I)
+EMAIL_OK = re.compile(r"(@(example\.(org|com|net)|users\.noreply\.github\.com|anthropic\.com)|^git@github\.com)$",
+                      re.I)                                    # git@github.com: the SSH remote, not a person
 
 
 def tracked(staged: bool) -> list[str]:
