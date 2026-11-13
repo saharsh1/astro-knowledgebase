@@ -21,6 +21,7 @@ Usage (from the repository root, in the knowledge base's Python environment):
     python scripts/publish_index.py --status
     python scripts/publish_index.py --pull            members: copy a newer published index to index/
     python scripts/publish_index.py --publish         index keeper: update from the published index, publish
+                                    [--from-local]    ... starting from index/ on this machine
     python scripts/publish_index.py --restore <ver>   index keeper: roll back to an archived version
 """
 from __future__ import annotations
@@ -159,7 +160,7 @@ def run_checker() -> None:
         sys.exit("The checker found errors; fix them before publishing:\n" + (r.stdout + r.stderr)[-3000:])
 
 
-def publish(device: str, keep: int, embedder=None, check: bool = True) -> dict:
+def publish(device: str, keep: int, embedder=None, check: bool = True, from_local: bool = False) -> dict:
     from kb_pkg import config, index as kb_index
     from kb_pkg.embed import Embedder
     from kb_pkg.store import Store
@@ -182,13 +183,15 @@ def publish(device: str, keep: int, embedder=None, check: bool = True) -> dict:
                      "Build a new index by hand (python -m kb_pkg.index --rebuild), then publish.")
         if STAGING.exists():
             shutil.rmtree(STAGING)
-        start = CURRENT if CURRENT.exists() else LOCAL if LOCAL.exists() else None
+        # --from-local: start from this machine's index when it already holds the new passages
+        # (e.g. after a trial); the build below still embeds whatever differs from the files.
+        start = LOCAL if from_local and LOCAL.exists() else CURRENT if CURRENT.exists() else LOCAL if LOCAL.exists() else None
         if start:
             copy_index(start, STAGING)
         else:
             STAGING.mkdir(parents=True)
         store = Store(STAGING)
-        old_manifest = store.read_manifest()
+        old_manifest = Store(CURRENT).read_manifest() if CURRENT.exists() else store.read_manifest()
         t0 = time.time()
         stats = kb_index.build(store, embedder or Embedder(device=device), progress=embedder is None)
         new_manifest = store.read_manifest()
@@ -306,10 +309,12 @@ def main() -> None:
     g.add_argument("--status", action="store_true")
     ap.add_argument("--device", default="auto", help="auto | cpu | mps | cuda")
     ap.add_argument("--keep", type=int, default=3, help="archived versions to keep")
+    ap.add_argument("--from-local", action="store_true",
+                    help="with --publish: start from index/ here, not from the published index")
     a = ap.parse_args()
     sys.path.insert(0, str(ROOT / "scripts"))
     if a.publish:
-        publish(a.device, a.keep)
+        publish(a.device, a.keep, from_local=a.from_local)
     elif a.pull:
         pull()
     elif a.restore:

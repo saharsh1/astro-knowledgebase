@@ -54,6 +54,8 @@ access to them, the skeleton still runs its checks and tests.
   with its right sources). 2026-11-13: right source first for 20, in the top 5 for 28, in the top 10
   for all 30; 7.6 different sources per top 10. A result list holds at most 2 passages of one
   source (`per_source`); the documentation's bibliography is not indexed.
+- Each paper passage starts with its paper's title and section (found from the numbered headings),
+  so a hit says where it is from. Measured on the 30 questions: first 20, top 3 27, top 5 29.
 - To come: the snapshot script.
 
 The design is in `docs/design/`.
@@ -72,6 +74,7 @@ python scripts/test_build_software.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
 python scripts/test_publish_index.py   # needs lancedb
 python scripts/test_sync.py            # needs lancedb
+python scripts/test_paper_sections.py  # needs pymupdf
 python scripts/test_share.py           # runs the GitHub check's tests in a copy (not in CI itself)
 python scripts/test_setup_doctor.py    # needs the full environment and the model in the cache
 python scripts/test_build_datamodel.py  # needs pymupdf; checks the DR4 draft if keeper/ has it

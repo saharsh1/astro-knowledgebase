@@ -25,10 +25,14 @@ def main() -> int:
     from kb_pkg import search
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--per-source", type=int, help="passages of one source in a list (default: the configured limit; 0: none)")
+    ap.add_argument("--index", type=Path, help="another index folder (a trial copy)")
     ap.add_argument("--quiet", action="store_true", help="only the summary")
     a = ap.parse_args()
     qs = yaml.safe_load((Path(__file__).resolve().parent / "eval_questions.yaml").read_text())
     s = search.build_default()
+    if a.index:
+        from kb_pkg.store import Store
+        s.store = Store(a.index)
     ranks, distinct = [], 0
     for q in qs:
         hits = s.search(q["question"], k=20, per_source=a.per_source)

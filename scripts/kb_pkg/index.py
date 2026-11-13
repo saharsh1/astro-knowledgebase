@@ -143,6 +143,7 @@ def content_hash(kind: str, path: Path) -> str:
     """The hash the manifest keeps for a source: its file, and for a paper also its cleaned text."""
     h = file_hash(path)
     if kind == "paper":
+        h += ":c" + chunk.PAPER_CHUNKS                    # how papers are cut is part of what is indexed
         cj = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
         if cj.exists():
             h += ":" + file_hash(cj)[:16]
