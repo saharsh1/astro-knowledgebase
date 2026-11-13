@@ -56,6 +56,11 @@ gaia:
       html: https://gea.esac.esa.int/archive/documentation/GDR3/
       datamodel_path: Gaia_archive/chap_datamodel/
       pdf: https://gea.esac.esa.int/archive/documentation/GDR3/pdf/GaiaDR3_documentation_1.3.pdf   # 185 MB; not used
+    papers:            # scripts/build/gaia_papers.py DR3: every paper on ESA's page, arm gaia
+      page: https://www.cosmos.esa.int/web/gaia/dr3-papers
+      extra:           # on the page, but without a DOI or arXiv link there
+        - {title: "The Gaia mission", doi: "10.1051/0004-6361/201629272", arxiv: "1609.04153",
+           why: "listed under Summary papers with an ADS link only"}
     archive_columns:   # the archive's own column list (gaia_docs.py --tap), to check the parsed data model against
       tap: https://gea.esac.esa.int/tap-server/tap
       query: "SELECT table_name, column_name, datatype, unit, ucd, description FROM tap_schema.columns WHERE table_name LIKE 'gaiadr3.%'"

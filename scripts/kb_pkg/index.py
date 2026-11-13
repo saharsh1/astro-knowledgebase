@@ -116,7 +116,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
 
 def chunks_for(source_id: str, kind: str, path: Path, extra: dict, count=None):
     if kind == "paper":
-        return chunk.chunk_paper(source_id, extract.extract_pdf(path), count=count)
+        return chunk.chunk_paper(source_id, extract.extract_paper(path)[0], count=count)
     if kind == "code":
         return chunk_code_file(extra["repo"], extra["rel"], path, count=count)
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -154,6 +154,10 @@ def build(store, embedder, *, rebuild=False, progress=False) -> dict:
     try:
         for source_id, (kind, path, extra) in found.items():
             h, key = file_hash(path), label_key(extra)
+            if kind == "paper":                             # the cleaned text counts as part of the paper
+                cj = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
+                if cj.exists():
+                    h += ":" + file_hash(cj)[:16]
             new_manifest[source_id] = f"{h} {key}"
             old_h, _, old_key = manifest.get(source_id, "").partition(" ")
             if old_h == h and old_key == key:

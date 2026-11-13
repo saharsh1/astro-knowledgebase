@@ -138,7 +138,8 @@ def check_skeleton(conv: dict, errors: list[str]) -> None:
 
 
 def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
-               stems: dict[str, str | None], strict_links: bool, errors: list, warnings: list) -> dict | None:
+               stems: dict[str, str | None], strict_links: bool, errors: list, warnings: list,
+               pending: frozenset = frozenset()) -> dict | None:
     """stems: file stem -> arm of every note (None for shared and generated notes)."""
     conv = v.conv
     stem = path.stem
@@ -222,6 +223,9 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
         target = target.strip().rstrip("\\")
         if ATTACHMENT.search(target) or target in stems:
             continue
+        if target in pending:
+            warnings.append(f"{rel}: link [[{target}]] is to a draft still in outbox/: publish both together")
+            continue
         msg = f"{rel}: link [[{target}]] does not resolve"
         (errors if strict_links else warnings).append(msg + ("" if strict_links else " (an arm is not synced here)"))
     return fm
@@ -261,8 +265,10 @@ def main() -> int:
         elif dest.stem in stems:
             errors.append(f"{rel}: a note named '{dest.stem}' exists already "
                           f"({by_stem[dest.stem][0].relative_to(ROOT)})")
+        outbox = ROOT / conv["outbox_dir"]
+        pending = frozenset(p.stem for p in outbox.rglob("*.md")) if outbox.exists() else frozenset()
         check_note(v, dest, rel, (ROOT / args.draft).read_text(encoding="utf-8"), dest,
-                   {**stems, dest.stem: v.place(dest)[0]}, not missing, errors, warnings)
+                   {**stems, dest.stem: v.place(dest)[0]}, not missing, errors, warnings, pending)
         checked = 1
     else:
         for stem, paths in by_stem.items():

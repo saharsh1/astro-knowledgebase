@@ -221,6 +221,14 @@ def main() -> int:
         note(draft, "title: n\ntype: note\nauthor: alice\ncreated: 2026-11-13\ntags: [Gaia]")
         code, out = run(root, "--draft", "outbox/new.md", "--dest", "live/milky-way/notes/New note.md")
         expect("--draft: a good draft passes", code == 0, out)
+        note(root / "outbox/papers/bibtex/New - BibTeX.md", "title: b\ntype: bibtex\nauthor: alice\ncreated: 2026-11-13\ntags: []")
+        note(root / "outbox/papers/New paper.md", "title: p\ntype: paper\nauthor: alice\ncreated: 2026-11-13\n"
+             "arxiv: '9'\nbibtex: '[[New - BibTeX]]'\narms: [gaia]\ntags: []", "[[New - BibTeX]]")
+        code, out = run(root, "--draft", "outbox/papers/New paper.md", "--dest", "live/papers/New paper.md")
+        expect("--draft: a link to another draft in outbox/ is a warning, not an error",
+               code == 0 and "publish both together" in out, out)
+        (root / "outbox/papers/New paper.md").unlink()
+        (root / "outbox/papers/bibtex/New - BibTeX.md").unlink()
         code, out = run(root, "--draft", "outbox/new.md", "--dest", "live/papers/Gaia BH1 paper.md")
         expect("--draft: never overwrite an existing note", code == 1 and "exists already" in out, out)
 

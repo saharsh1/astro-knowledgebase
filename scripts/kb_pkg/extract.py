@@ -1,17 +1,38 @@
 """Text extraction from PDFs and notes, plus metadata helpers."""
+import hashlib
+import json
 import re
 from pathlib import Path
 
-import fitz  # pymupdf
+import pymupdf
 
 
 def extract_pdf(path: Path) -> list[tuple[int, str]]:
     """Return [(page_number_1_indexed, text), ...] for a PDF."""
     pages: list[tuple[int, str]] = []
-    with fitz.open(path) as doc:
+    with pymupdf.open(path) as doc:
         for i, page in enumerate(doc, start=1):
             pages.append((i, page.get_text("text")))
     return pages
+
+
+def extract_paper(path: Path) -> tuple[list[tuple[int, str]], str]:
+    """([(page, text)], how) of a paper PDF: the cleaned text without the reference list
+    (keeper/parsed/papers/<name>.json, from scripts/build/paper_text.py) when it exists and
+    was made from this very file; otherwise the raw text."""
+    from . import config
+    f = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
+    if f.exists():
+        d = json.loads(f.read_text())
+        if d.get("sha256") == hashlib.sha256(path.read_bytes()).hexdigest():
+            pages = []
+            for p in d["pages"]:
+                t = p["text"]
+                for a, b in sorted(p["references"], reverse=True):
+                    t = t[:a] + t[b:]
+                pages.append((p["page"], t))
+            return pages, "cleaned"
+    return extract_pdf(path), "raw"
 
 
 def read_note(path: Path) -> str:
