@@ -5,12 +5,14 @@
 version: 1
 
 changelog:
-  - "1 (2026-11-13): first version of the astro knowledge base (arms, live notes)."
+  - "1 (2026-11-13): first version of the astro knowledge base (arms incl. the Gaia foundation arm, live notes, roles in Keeper)."
 
-# Roles. Keeper's access per library enforces them; the skills read this list only to
+# The owner (also in .github/CODEOWNERS). The other roles (curators) are listed in
+# keeper/roles.yaml, not here: this repository is public, the member list is not.
+# Keeper's access per library enforces the roles; the skills read roles.yaml only to
 # choose which path to offer (/ingest for curators, /request-paper for members).
 owner: saharsh1
-curators: [saharsh1]
+roles_file: roles.yaml    # in keeper/
 
 # Where things are, relative to the repository root.
 live_dir: live            # Keeper library "astro-kb-notes"
@@ -18,11 +20,19 @@ keeper_dir: keeper        # Keeper library "astro-kb-data"
 outbox_dir: outbox        # local drafts
 
 # Topical arms: folders live/<arm>/ with these sub-folders. Each arm adds its own tags.
+# A foundation arm (gaia) serves every arm: its tags may be used in any arm, its notes
+# never link into a non-foundation arm (links run from the science arms into Gaia), and
+# the generated Gaia documentation (keeper/generated/gaia-docs) carries its label.
 arm_folders: [notes, lessons, topics, discussion]
 arms:
+  gaia:
+    title: Gaia
+    foundation: true
+    tags: [DataModel, NSS, Validation, EpochAstrometry, EpochPhotometry, Systematics,
+           SelectionCriteria, DataRelease]
   binary-stars:
     title: Binary stars
-    tags: [AstrometricBinaries, SpectroscopicBinaries, EclipsingBinaries, NSS, Orbits,
+    tags: [AstrometricBinaries, SpectroscopicBinaries, EclipsingBinaries, Orbits,
            CompactObjects, WhiteDwarfs, BrownDwarfs, SelectionFunction]
   milky-way:
     title: Milky Way
@@ -36,9 +46,11 @@ shared_folders: [papers, code, requests]
 
 # Folders of keeper/ that hold generated notes (written by the index keeper only).
 generated_folders: [generated]
+# The arm whose label the generated documentation notes (gaia-table, gaia-section) carry.
+docs_arm: gaia
 
 # Tags any note may use, in every arm.
-common_tags: [Gaia, Astrometry, RV, Photometry, Spectroscopy, SED, Software, DataModel]
+common_tags: [Gaia, Astrometry, RV, Photometry, Spectroscopy, SED, Software]
 
 # Fields every note must have.
 required_common: [title, type, created, author, tags]

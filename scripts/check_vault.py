@@ -91,9 +91,13 @@ class Vault:
     def missing_arms(self) -> list[str]:
         return [a for a in self.arms if not (self.live / a).is_dir()]
 
+    def foundation(self) -> set[str]:
+        """Arms that serve every arm (gaia): their tags are allowed everywhere."""
+        return {a for a, spec in self.arms.items() if (spec or {}).get("foundation")}
+
     def allowed_tags(self, arm: str | None, fm: dict) -> set[str]:
         tags = set(self.conv["common_tags"])
-        arms = set(self.arms) if arm is None else {arm, *as_list(fm.get("arms"))}
+        arms = set(self.arms) if arm is None else {arm, *as_list(fm.get("arms")), *self.foundation()}
         for a in arms:
             tags |= set(self.arms.get(a, {}).get("tags", []))
         return tags
@@ -116,13 +120,16 @@ def check_skeleton(conv: dict, errors: list[str]) -> None:
     for name in ["Lesson", "Note", "Discussion", "Topic", "Request"]:
         if not (ROOT / "templates" / f"{name}.md").exists():
             errors.append(f"templates/{name}.md is missing")
+    if conv.get("docs_arm") and conv["docs_arm"] not in conv["arms"]:
+        errors.append(f"conventions.yaml: docs_arm '{conv['docs_arm']}' is not an arm")
     overlap = set(conv["common_tags"]) & {t for a in conv["arms"].values() for t in a.get("tags", [])}
     if overlap:
         errors.append(f"conventions.yaml: tags both common and arm-specific: {sorted(overlap)}")
 
 
 def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
-               stems: set[str], strict_links: bool, errors: list, warnings: list) -> dict | None:
+               stems: dict[str, str | None], strict_links: bool, errors: list, warnings: list) -> dict | None:
+    """stems: file stem -> arm of every note (None for shared and generated notes)."""
     conv = v.conv
     stem = path.stem
     if conv["conflict_marker"] in path.name:
@@ -172,11 +179,14 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
         elif m.groupdict().get("author") and m.group("author") != str(fm.get("author")):
             errors.append(f"{rel}: file name names '{m.group('author')}', but author is '{fm.get('author')}'")
 
+    targets = []
     for field in ("about", "consolidates", "supersedes"):
         for val in as_list(fm.get(field)):
             target = link_target(val)
             if target is None:
                 errors.append(f"{rel}: '{field}' must hold wikilinks like \"[[Title]]\", not {val!r}")
+            else:
+                targets.append(target)
     if ntype == "discussion" and len(as_list(fm.get("about"))) != 1:
         errors.append(f"{rel}: a discussion is about exactly one note")
 
@@ -187,6 +197,13 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                 warnings.append(f"{rel}: contains '{marker}' — check it is not from an internal (non-public) document")
 
     body = COMMENT.sub("", FENCE.sub("", text))
+    targets += [t.strip() for t in WIKILINK.findall(body)]
+    if arm in v.foundation():                       # links run into Gaia, never out of it
+        for target in sorted(set(targets)):
+            other = stems.get(target)
+            if other and other not in v.foundation():
+                errors.append(f"{rel}: a {arm} note links to [[{target}]] in the {other} arm; links run "
+                              f"from the other arms into {arm}, so put this link in a note of the {other} arm")
     for target in WIKILINK.findall(body):
         target = target.strip()
         if ATTACHMENT.search(target) or target in stems:
@@ -218,7 +235,7 @@ def main() -> int:
     by_stem: dict[str, list[Path]] = defaultdict(list)
     for p in notes:
         by_stem[p.stem].append(p)
-    stems = set(by_stem)
+    stems = {s: v.place(ps[0])[0] for s, ps in by_stem.items()}
 
     if args.draft:                                   # one draft, checked at its destination
         if not args.dest:
@@ -231,7 +248,7 @@ def main() -> int:
             errors.append(f"{rel}: a note named '{dest.stem}' exists already "
                           f"({by_stem[dest.stem][0].relative_to(ROOT)})")
         check_note(v, dest, rel, (ROOT / args.draft).read_text(encoding="utf-8"), dest,
-                   stems | {dest.stem}, not missing, errors, warnings)
+                   {**stems, dest.stem: v.place(dest)[0]}, not missing, errors, warnings)
         checked = 1
     else:
         for stem, paths in by_stem.items():
@@ -262,6 +279,15 @@ def main() -> int:
         checked = len(notes)
 
     if args.keeper:
+        roles = v.keeper / conv.get("roles_file", "roles.yaml")
+        if not roles.exists():
+            warnings.append(f"keeper/{roles.name} is missing: only the owner counts as a curator")
+        else:
+            try:
+                r = yaml.safe_load(roles.read_text()) or {}
+                assert isinstance(r, dict) and isinstance(r.get("curators", []), list)
+            except (yaml.YAMLError, AssertionError):
+                errors.append(f"keeper/{roles.name}: unreadable (expected 'curators: [<github user>, ...]')")
         locks = v.keeper / "locks"
         locked = set()
         for lf in sorted(locks.rglob("*.json")) if locks.exists() else []:

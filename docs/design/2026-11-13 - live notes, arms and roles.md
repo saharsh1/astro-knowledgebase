@@ -21,8 +21,8 @@ tags: [Software]
 | Place | Holds | Writers |
 |---|---|---|
 | **Git repository** (skeleton) | `CLAUDE.md`, `conventions.yaml`, `templates/`, `scripts/`, `.claude/`, `.github/`, `sources.yaml`, `environment.yml`, `.mcp.json`, `HOWTO.md`, `MANUAL.md`, `README.md`, `demos/`, `docs/` | Owner (members propose changes by pull request) |
-| **Keeper library `binary-stars-knowledgebase`** (exists), synced to `keeper/` | `pdfs/`, `data/`, `parsed/`, `index/`, **and a new `generated/`**: `Home.md`, `Index - lessons`, `Index - papers`, the `gaia-docs/` table notes, the usage blocks of the code cards | Owner and index keeper. Members get it **read-only** |
-| **New Keeper library `bskb-notes`**, synced to `live/` | One sub-folder per topical arm (§9), each with `notes/`, `lessons/`, `discussion/`, `topics/`; plus the shared `papers/` (with `bibtex/`) and `code/` cards | Members, **read-write** |
+| **Keeper library `astro-kb-data`**, synced to `keeper/` | `pdfs/`, `data/`, `parsed/`, `index/`, **and a new `generated/`**: `Home.md`, `Index - lessons`, `Index - papers`, the `gaia-docs/` table notes, the usage blocks of the code cards | Owner and index keeper. Members get it **read-only** |
+| **Keeper library `astro-kb-notes`**, synced to `live/` | One sub-folder per topical arm (§9), each with `notes/`, `lessons/`, `discussion/`, `topics/`; plus the shared `papers/` (with `bibtex/`) and `code/` cards | Members, **read-write** |
 | **Each machine only** (git-ignored, not synced) | `outbox/`, `sandbox/`, `index/`, `external/`, `.obsidian/workspace*`, `scripts/config.local` | That machine |
 
 - **The data stays protected.** Keeper sets read-only or read-write per library. So the PDFs and data stay protected, and `files.lock` keeps describing files that do not change. Notes never go in `files.lock`.
@@ -63,7 +63,7 @@ The pull request was the point where a check ran and a person looked. With live 
 ## 4. Snapshots
 
 - A new script, `scripts/snapshot_notes.py`, for the owner only:
-  1. Copy `live/` and `keeper/generated/` to a separate repository (`binary-stars-knowledgebase-notes`).
+  1. Copy `live/` and `keeper/generated/` to a separate, private repository (`astro-knowledgebase-notes`).
   2. Run `check_vault.py`.
   3. Commit and tag the snapshot as `notes-<date>`.
   4. Write a report of the changes since the last snapshot: new files, changed files, files whose `author` changed, conflict copies, and review-marker hits.
@@ -112,11 +112,11 @@ The pull request was the point where a check ran and a person looked. With live 
    - whether Keeper's Seafile supports file locking (a paid-edition feature);
    - whether the file history records *who* changed a file;
    - whether read-only sharing per library works for the group.
-2. Create the library `bskb-notes`, empty, read-write for members. Make `binary-stars-knowledgebase` read-only for members.
+2. Create the library `astro-kb-notes`, empty, read-write for members. Make `astro-kb-data` read-only for members.
 3. Change the skeleton (§7) on one branch, with `conventions.yaml` version 2.
 4. Run the migration on the owner's machine: move the notes from git into `live/` and the generated notes into `keeper/generated/`, then delete them from git in the same pull request.
 5. Make the first snapshot (`notes-2026-11-xx`) and publish the index.
-6. Members: pull the skeleton, sync `bskb-notes` into `live/`, run `scripts/setup.sh`.
+6. Members: pull the skeleton, sync `astro-kb-notes` into `live/`, run `scripts/setup.sh`.
 7. After two weeks: read the first snapshot reports for conflict copies and changes against the one-writer rule, and adjust.
 
 ## 9. Arms: topical sub-libraries
@@ -129,9 +129,9 @@ Added 2026-11-13 after a second discussion. The owner stays the owner of every a
 |---|---|---|---|
 | **Reference** | `gaia-docs` (generated data-model notes), PDFs and parsed text | `keeper/` (the data library, read-only for members) | Scripts, index keeper |
 | **Shared** | `papers` (one note per paper), `code` (one card per repository) | `live/papers/`, `live/code/` | The member who imported the paper or wrote the card |
-| **Topical** | `binary-stars`, `milky-way`, `hot-stars`, … | `live/<arm>/`, sub-folders of `bskb-notes` | Members (one writer per file) |
+| **Topical** | `binary-stars`, `milky-way`, `hot-stars`, … | `live/<arm>/`, sub-folders of `astro-kb-notes` | Members (one writer per file) |
 
-- **Arms are sub-folders of one library.** All topical arms are sub-folders of the single Keeper library `bskb-notes`. The owner shares that library once, read-write. There is no Keeper administration per arm.
+- **Arms are sub-folders of one library.** All topical arms are sub-folders of the single Keeper library `astro-kb-notes`. The owner shares that library once, read-write. There is no Keeper administration per arm.
 - **The data library stays separate,** because it needs different access (read-only for members). Keeper sets access per library. Whether Keeper also supports access per *folder* is not known (§8, step 1). Until then, an arm with a restricted membership would have to become a library of its own.
 - **Paper PDFs need a way in.** A member cannot write into the read-only data library. Papers come in by request instead (§10).
 
@@ -185,11 +185,11 @@ Added 2026-11-13.
 | Role | Keeper access | Can |
 |---|---|---|
 | **Owner** | Both libraries; owns the git skeleton | Everything a curator can, plus the rules, pins and sharing |
-| **Curator** | Write to the data library, write to `bskb-notes` | Fetch and ingest papers and data; act on requests |
-| **Member** | Write to `bskb-notes` only | Write notes; request papers |
+| **Curator** | Write to the data library, write to `astro-kb-notes` | Fetch and ingest papers and data; act on requests |
+| **Member** | Write to `astro-kb-notes` only | Write notes; request papers |
 
 - **Keeper enforces the roles.** Keeper's access per library is the real control: a member's machine cannot write a PDF into the data library.
-- **`conventions.yaml` lists the `curators`.** The skills read this list only to choose which path to offer.
+- **`keeper/roles.yaml` lists the `curators`.** The skills read this list only to choose which path to offer. It is in Keeper, not in git, because the repository is public (§13). Only the owner can write it, since the data library is read-only for everyone else.
 
 ### A member requests a paper
 
@@ -217,10 +217,11 @@ Added 2026-11-13.
 Added 2026-11-13. This replaces §8 steps 3–4 and `scripts/migrations/2_live_notes.py`.
 
 - **New names.** A new git repository, with a new name (the arms go beyond binary stars), and two new Keeper libraries (data, notes). The current repository and Keeper library keep running unchanged until the switch.
-- **The skeleton is built new,** starting from the current scripts, skills and templates and adapted to §1–10. The new repository starts with no history. The old repository stays as the archive of that history.
+- **The skeleton is built new,** starting from the current scripts, skills and templates and adapted to §1–10. The new repository starts with no history.
+- **The old repository and the old Keeper library will be deleted** (decided 2026-11-13), and the history of the new repository will be started over before it goes public. So the import must read everything it needs *before* the deletion, and the import is the time to reorganise freely: there is no history to keep compatible.
 - **Migration is a one-time import.** A script reads the old repository and the old Keeper library and writes the new layout:
-  - notes and lessons go to `binary-stars/`, with lessons renamed to include the author;
-  - paper notes get `arms: [binary-stars]`;
+  - each note and lesson goes to `gaia` or `binary-stars` (§12), following a list the owner approves first; lessons are renamed to include the author;
+  - paper notes get `arms: [gaia]` (Gaia Collaboration and DPAC papers) or `arms: [binary-stars]`;
   - code cards are split from their generated usage blocks;
   - the generated notes are regenerated;
   - every arm is embedded fresh with one model.
@@ -229,11 +230,45 @@ Added 2026-11-13. This replaces §8 steps 3–4 and `scripts/migrations/2_live_n
   2. Run the import.
   3. Make the first snapshot.
   4. Members clone the new skeleton and sync the new libraries.
-  5. Archive the old repository on GitHub.
+  5. Check the import (checker, a search for a few known notes), then delete the old repository and the old Keeper library.
+
+## 12. The Gaia arm: a foundation for every arm
+
+Added 2026-11-13. The old knowledge base mixed two things: what Gaia says (documentation, data model, validation, the Gaia Collaboration papers) and binary-star science. Every arm needs the first; only one arm needs the second.
+
+- **A foundation arm `gaia`** (`foundation: true` in `conventions.yaml`). It holds notes, lessons, topics and discussion like any arm. Its label also goes on the generated documentation (`docs_arm: gaia`) and on the papers that its notes cite or that a curator ingests for it.
+
+  | `gaia` | a science arm, e.g. `binary-stars` |
+  |---|---|
+  | data model and documentation (generated) | the astrophysics |
+  | Gaia Collaboration and DPAC papers | papers that use Gaia for science |
+  | lessons on columns, flags, units, `corr_vec`, selection criteria | lessons on a paper's error, a method, a population |
+  | validation tables: Gaia values against independent catalogues | notes that connect the two, e.g. a mass from a DR3 orbit |
+
+- **Links run one way, from the science arms into `gaia`.** The checker refuses a `gaia` note with a link (in the text, or in `about:`, `consolidates:`, `supersedes:`) to a note of a non-foundation arm. Links to shared papers and code cards are allowed. So the Gaia arm stays complete without any science arm, and a Milky Way member can use it without binary-star notes in the way.
+- **The reverse view is generated, not written.** `lookup_column` lists the notes of every arm that use a column: by `applies_to:` or by a link to the column's data-model note. Obsidian's backlinks show the same for wikilinks.
+- **Tags.** The Gaia tags (`NSS`, `DataModel`, `Validation`, …) may be used in every arm, because science notes are about Gaia products too. Tags describe a note; the arm decides where it lives and who searches it.
+- **Search.** `arm="gaia"`: everything about Gaia (notes, papers, documentation). `source_type="docs"`: the documentation only.
+
+## 13. A public skeleton, closed Keeper libraries
+
+Added 2026-11-13.
+
+- **The git repository is public.** The rules, scripts, skills and templates are a method others can reuse. Members can clone without a GitHub invitation.
+- **The Keeper libraries stay closed.** The notes, papers, data, indexes and the member list are there.
+- **What keeps private things out of git:**
+  1. `scripts/check_public.py` refuses files outside the skeleton, PDFs, data, images and archives, files over 1 MB, tokens and keys, and e-mail addresses (other than `example.org` and noreply). It runs before `/share` (`--staged`) and on every pull request.
+  2. The curator list is in `keeper/roles.yaml`, not in `conventions.yaml`.
+  3. `.obsidian/bookmarks.json` is not in git: bookmarks name private notes.
+  4. The snapshot repository of the notes (§4) is **private**.
+- **Only the owner merges.** CODEOWNERS and branch protection on `main`. This matters more in public: the hooks and `.mcp.json` run code on every member's machine, and anyone can open a pull request.
+- **Squash merges only.** A file added and removed inside a pull request then never reaches the history of `main`.
+- **Licences.** MIT for the code (`LICENSE`), CC BY 4.0 for the text (`LICENSE-docs.md`). Neither covers the content in Keeper.
+- **Code pins.** `sources.yaml` names the code repositories and commits that are indexed. They are all public today. A private repository must not be pinned there.
 
 ## Open questions
 
-- Whether Keeper supports access per folder. If it does, the data library and `bskb-notes` could become one library, and arms could have restricted members.
+- Whether Keeper supports access per folder. If it does, the data library and `astro-kb-notes` could become one library, and arms could have restricted members.
 - If Keeper has file locking, a few shared hub notes could allow more than one writer.
 - If the Seafile history records the person who made each change, the snapshot report can name them. Otherwise it can only show that a file changed.
 - `demos/` stay in git, since they are reviewed examples. A notebook a member wants to share would then still go through a pull request.

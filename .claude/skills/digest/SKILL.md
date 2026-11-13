@@ -19,5 +19,8 @@ description: Write a digest of a topic from the knowledge base — what the cura
    **What the sources say** (one bullet per claim, cited as [[paper note|Author year]], p. N),
    **In the code**, **Open questions / disagreements**, **Sources searched**.
    A digest that replaces an older one has `supersedes:` with a link to it.
+   The arm: `gaia` for what the Gaia data and documentation say (e.g. the DR4
+   non-single-star selection criteria); a science arm for the science. A `gaia` digest
+   cites papers and Gaia notes only, never notes of a science arm.
 4. Plain short sentences; numbers with units and their source; no claim without a citation.
 5. Show the note, then `/publish`. Offer `/lesson` for any pitfall found.

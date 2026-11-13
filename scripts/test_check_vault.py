@@ -52,8 +52,26 @@ def skeleton(tmp: Path) -> Path:
 
 def good_notes(root: Path) -> None:
     live = root / "live"
-    for arm in ["binary-stars", "milky-way", "hot-stars"]:
+    for arm in ["gaia", "binary-stars", "milky-way", "hot-stars"]:
         (live / arm / "notes").mkdir(parents=True, exist_ok=True)
+    note(live / "gaia/lessons/2026-11-13 - carol - corr_vec order.md", """
+title: corr_vec order
+type: lesson
+kind: pitfall
+author: carol
+created: 2026-11-13
+last_checked: 2026-11-13
+status: current
+applies_to: ["dr3:nss_two_body_orbit.corr_vec"]
+tags: [NSS, DataModel]
+""", "From the documentation; see [[Gaia BH1 paper]] for a use.")
+    note(live / "hot-stars/notes/Hot binaries.md", """
+title: Hot binaries
+type: note
+author: dave
+created: 2026-11-13
+tags: [NSS, OBStars]
+""", "Decode the covariance as in [[2026-11-13 - carol - corr_vec order]].")
     note(live / "binary-stars/lessons/2026-11-13 - alice - Period unit.md", """
 title: Period unit
 type: lesson
@@ -115,7 +133,7 @@ def main() -> int:
 
         good_notes(root)
         code, out = run(root)
-        expect("good notes in three arms: no errors", code == 0 and "0 error(s)" in out, out)
+        expect("good notes in four arms (a science note links into gaia; Gaia tags anywhere): no errors", code == 0 and "0 error(s)" in out, out)
 
         live = root / "live"
         bad = {
@@ -132,8 +150,15 @@ def main() -> int:
                 "title: x\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "used more than once"),
             "tag of another arm": (
                 live / "hot-stars/notes/Winds note.md",
-                "title: Winds note\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: [NSS]",
-                "tag 'NSS' is not allowed"),
+                "title: Winds note\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: [Orbits]",
+                "tag 'Orbits' is not allowed"),
+            "a gaia note links into a science arm": (
+                live / "gaia/notes/Column use.md",
+                "title: c\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "links run"),
+            "a gaia discussion is about a science note": (
+                live / "gaia/discussion/Period unit - 2026-11-13 1200 - bob.md",
+                "title: d\ntype: discussion\nabout: '[[2026-11-13 - alice - Period unit]]'\nauthor: bob\n"
+                "created: 2026-11-13\ntags: []", "links run"),
             "about is not a wikilink": (
                 live / "binary-stars/discussion/Period unit - 2026-11-13 1100 - carol.md",
                 "title: d\ntype: discussion\nabout: Period unit\nauthor: carol\ncreated: 2026-11-13\ntags: []",
@@ -157,7 +182,9 @@ def main() -> int:
                 "title: l\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "does not resolve"),
         }
         for name, (path, fm, needle) in bad.items():
-            note(path, fm, "[[No such note]]" if name == "broken link" else "")
+            body = {"broken link": "[[No such note]]",
+                    "a gaia note links into a science arm": "Used in [[Hot binaries]]."}.get(name, "")
+            note(path, fm, body)
             code, out = run(root)
             expect(f"catches: {name}", code == 1 and needle in out, out)
             path.unlink()

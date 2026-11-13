@@ -9,7 +9,11 @@ description: Record a communal lesson — a pitfall, tip, recipe or open questio
    **Evidence** (paper and page, documentation section, notebook, code file and line),
    **How to check** (a line of code or an ADQL query).
 2. Choose the arm (`conventions.yaml`): the arm whose members need it most. Other arms
-   that should find it go in `arms:`.
+   that should find it go in `arms:`. **Gaia or a science arm?** A lesson on what the Gaia
+   data or documentation says (a column, a flag, a unit, `corr_vec`, a selection
+   criterion, a validation result) goes to `gaia`. A lesson on the science, or on how a
+   science question uses Gaia (a paper's error, a mass from an orbit), goes to the science
+   arm and links into the Gaia notes. A `gaia` note never links into a science arm.
 3. Frontmatter from `templates/Lesson.md`: `kind`, `status: current`,
    `author` = `git config github.user`, `created` and `last_checked` = today,
    `applies_to` (e.g. `dr3:nss_two_body_orbit.corr_vec`, `repo:<name>@<pin in sources.yaml>`),

@@ -37,7 +37,9 @@ def vault(tmp: Path) -> Path:
         shutil.copy(REPO / "scripts" / s, root / "scripts" / s)
     shutil.copytree(REPO / "templates", root / "templates")
     conv = yaml.safe_load((REPO / "conventions.yaml").read_text())
-    conv["owner"], conv["curators"] = "alice", ["alice"]
+    conv["owner"] = "owner1"                         # alice is a curator through keeper/roles.yaml
+    (root / "keeper").mkdir(parents=True)
+    (root / "keeper" / "roles.yaml").write_text("curators: [alice]\n")
     (root / "conventions.yaml").write_text(yaml.safe_dump(conv, sort_keys=False))
     for arm in conv["arms"]:
         (root / "live" / arm / "notes").mkdir(parents=True)

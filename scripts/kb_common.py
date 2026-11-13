@@ -44,8 +44,19 @@ def github_user() -> str:
     return user
 
 
+def roles() -> dict:
+    """keeper/roles.yaml ({curators: [...]}), kept in Keeper because this repository is public.
+    Missing or unreadable: no curators besides the owner."""
+    f = KEEPER / CONV.get("roles_file", "roles.yaml")
+    try:
+        r = yaml.safe_load(f.read_text()) if f.exists() else {}
+    except yaml.YAMLError:
+        r = {}
+    return r if isinstance(r, dict) else {}
+
+
 def is_curator(user: str) -> bool:
-    return user == CONV.get("owner") or user in (CONV.get("curators") or [])
+    return user == CONV.get("owner") or user in (roles().get("curators") or [])
 
 
 def q(s: str) -> str:

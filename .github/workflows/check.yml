@@ -14,6 +14,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pyyaml==6.0.3
+      # The repository is public: nothing but the skeleton may be in it.
+      - run: python scripts/check_public.py
+      - run: python scripts/test_check_public.py
       # No live/ on GitHub: this checks the skeleton (conventions, templates) only.
       - run: python scripts/check_vault.py
       - run: python scripts/test_check_vault.py

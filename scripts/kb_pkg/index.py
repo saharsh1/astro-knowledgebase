@@ -9,8 +9,9 @@ Indexed sources:
           function/class, notebooks by cells, README/docs .md by heading
           (source_type "code"; author = repository name)
 
-Labels: every passage carries `arms`, the arms it belongs to ('|a|b|', or '' for code
-and documentation). A note: its folder's arm plus its `arms:`. A paper (note and PDF): its
+Labels: every passage carries `arms`, the arms it belongs to ('|a|b|', or '' for code).
+A note: its folder's arm plus its `arms:`. The generated Gaia documentation: the
+`docs_arm` of conventions.yaml (gaia). A paper (note and PDF): its
 `arms:` plus every arm whose notes link to it. When only the labels of a source change
 (e.g. a new note cites a paper), its passages are relabelled without embedding them again.
 
@@ -65,6 +66,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
     extra['arms'] is the label string and extra['stype'] the source type of a note."""
     found: dict[str, tuple[str, Path, dict]] = {}
     known_arms = set(config.arms())
+    docs_arm = config.conventions().get("docs_arm")
     notes: list[tuple[Path, dict, str | None]] = []
     for folder in config.note_folders():
         for p in sorted(folder.rglob("*.md")):
@@ -84,8 +86,10 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
         arms = {arm, *_arms_list(fm)} if arm else set(_arms_list(fm))
         if fm.get("type") == "paper":
             arms |= cited.get(p.stem, set())
-        arms &= known_arms
         stype = "docs" if fm.get("type") in DOCS_TYPES else "note"
+        if stype == "docs" and docs_arm:
+            arms.add(docs_arm)
+        arms &= known_arms
         found[rel] = ("note", p, {"arms": labels(arms), "stype": stype})
         if fm.get("type") == "paper":
             pdf = fm.get("pdf") or ""

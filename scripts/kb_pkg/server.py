@@ -15,6 +15,7 @@ from mcp.server.fastmcp import FastMCP
 
 from . import config
 from . import search as search_mod
+from .usage import notes_using_column
 
 mcp = FastMCP("astro-kb")
 _searcher = None
@@ -109,7 +110,8 @@ def _usage() -> dict:
 def lookup_column(table: str, column: str) -> dict:
     """Exact record of a Gaia archive column from the parsed data models (DR4
     draft data model, DR3 archive column list): type, unit, description, PDF pages,
-    and where the curated papers and the group's code use it. Use this, never
+    and where it is used: the notes of every arm (by applies_to or a link to the
+    column), the curated papers and the group's code. Use this, never
     memory or search_kb, for column names, types, units and flag bits."""
     cols, use = _columns(), _usage()
     table = table.split(".")[-1]
@@ -123,6 +125,7 @@ def lookup_column(table: str, column: str) -> dict:
         return {"found": False, "table": table, "column": column, "similar": similar}
     return {"found": True, "table": table, "column": column, "records": found,
             "note": f"[[DR4 draft - {table}#{column}]]" if "DR4 draft" in found else None,
+            "notes": notes_using_column(table, column),
             "curated_papers": use.get(("papers", table, column), []),
             "group_code": use.get(("code", table, column), []),
             "scix_papers_2022_2026": use.get(("scix", table, column))}

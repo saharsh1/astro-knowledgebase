@@ -178,7 +178,7 @@ def main() -> int:
 
     user = github_user()
     if not is_curator(user):
-        sys.exit(f"'{user}' is not a curator (conventions.yaml): ask for the paper with /request-paper.")
+        sys.exit(f"'{user}' is not a curator (keeper/roles.yaml): ask for the paper with /request-paper.")
     jobs = []                                         # (kind, value, arm, requested_by)
     for rp in a.request:
         fm = frontmatter(ROOT / rp)

@@ -6,11 +6,13 @@ description: Curators only — add papers to the knowledge base (PDF and lock in
 # /ingest [<ids> | --requests]
 
 1. Check the role: `git config github.user` must be the owner or in `curators:` of
-   `conventions.yaml`. If not, stop and offer `/request-paper`.
+   `keeper/roles.yaml`. If not, stop and offer `/request-paper`.
 2. Choose the papers:
    - `--requests` (or "the requests"): `python scripts/ingest_paper.py --list-requests`,
      show the open requests (id, arm, who, why), and ask which to ingest.
    - ids given: ask for the arm if the user did not say.
+     Gaia Collaboration and DPAC papers (data release, validation, documentation
+     papers) take the arm `gaia`; papers that use Gaia for science take the science arm.
 3. Rule 1 (public material only): the script fetches only publisher open access or arXiv.
    For `--pdf <file>`, ask the user to confirm the copy is public before running it.
 4. Run `python scripts/ingest_paper.py --request <request files>` or

@@ -6,7 +6,7 @@ description: Ask the curators to add a paper to the knowledge base. Use when the
 # /request-paper <arXiv id | DOI | bibcode | URL>
 
 Members request; curators ingest (rule 5). If the user is a curator
-(`git config github.user` is the owner or in `curators:` of `conventions.yaml`), offer
+(`git config github.user` is the owner or in `curators:` of `keeper/roles.yaml`), offer
 `/ingest` instead.
 
 1. Ask for what is missing: the arm (from `conventions.yaml`) and one line on why the

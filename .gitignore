@@ -10,10 +10,10 @@ external/
 .index-staging/
 scripts/config.local
 
-# Obsidian: only the shared settings are in git; the workspace is per machine
+# Obsidian: only the app settings are in git. Bookmarks name notes, and the notes are
+# private (Keeper), so bookmarks stay on each machine.
 .obsidian/*
 !.obsidian/app.json
-!.obsidian/bookmarks.json
 
 .claude/settings.local.json
 .claude/state/
