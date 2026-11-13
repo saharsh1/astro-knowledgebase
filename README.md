@@ -12,8 +12,8 @@ which the Seafile app syncs into `live/` (notes) and `keeper/` (data).
 
 - Done: rules, conventions, templates, checker, hooks; the skills `/publish`,
   `/request-paper`, `/ingest`, `/lesson`, `/digest` and their scripts.
-- To come: `/consolidate`, `/resolve`, `/sync`, `/share`, `/publish-index`; one search
-  index per arm; `setup.sh` and `doctor.py`; the snapshot script; the import of the
+- To come: `/consolidate`, `/resolve`, `/sync`, `/share`, `/publish-index`; arm and
+  docs labels in the search index; `setup.sh` and `doctor.py`; the snapshot script; the import of the
   binary stars knowledge base.
 
 The design is in `docs/design/`.

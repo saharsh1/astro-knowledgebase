@@ -140,11 +140,23 @@ Added 2026-11-13 after a second discussion. The owner stays the owner of every a
 - **Papers belong to several arms.** A paper often serves several arms. Its note sits once in `live/papers/`, and its PDF is parsed and embedded once. The importer sets the first arm in the paper note's `arms:`. Further arms are **derived**, not edited: a paper belongs to every arm that has a note citing it. The index keeper writes the result to `keeper/generated/arms/papers.json`. So no member edits another member's paper note to add an arm.
 - **Topical notes have one home arm.** Each topical note lives in one arm's folder. It may list other arms in `arms:` so that their searches find it. Nothing is copied.
 
-### Embeddings: separate indexes, one model
+### Embeddings: one index, every passage labelled
 
-- **One index per arm:** `index/<arm>/` for each topical arm, plus `index/papers/`, `index/code/` and `index/gaia-docs/`. Each has a published copy under `keeper/index/<arm>/`. Rebuilding one arm does not touch the others.
-- **One model and one chunker for every arm.** Scores from different models cannot be compared, so a merged search would rank passages wrongly, and no error would show it. `index_meta.json` already records the model and the chunker hash. `search_kb` refuses to merge indexes that disagree. Changing the model means rebuilding every arm, and only the owner decides that.
-- **`search_kb(arm=...)`** takes one arm, several, or all. With no argument, it searches every arm synced on the machine and merges the results by score.
+Revised 2026-11-13. This replaces "one index per arm". Updates already process only the changed files, so separate indexes would save almost nothing. They would add a merge step and a model check between tables.
+
+- **One index, one model.** It holds every passage: notes, papers, code and documentation. One embedding model and one chunker, as today. Changing the model means one full rebuild, and only the owner decides that.
+- **Each passage carries two labels:**
+  - `arm`: the home arm of a note. For a paper, every arm it belongs to: the importer's arm plus the arms whose notes cite it.
+  - `source_type`: `note`, `paper`, `code` or `docs`. `docs` is new and covers the Gaia data-model and documentation notes in `keeper/generated/`.
+- **The search filters are optional:**
+  - `search_kb(query)`: everything. This is the default, for example for the uses of a column across arms.
+  - `search_kb(query, arm="milky-way")`: one topic. That arm's notes, plus papers linked to it.
+  - `search_kb(query, source_type="docs")`: documentation only. Also `"paper"` and `"code"`.
+  - The two filters combine.
+- **Column facts are not searched by meaning.** They come from `lookup_column` and `find_columns` (rule 10). A typical question uses both:
+  1. `lookup_column` for the table entry;
+  2. `search_kb` with no filter for how the column is used.
+- **Revisit later** if an arm gets its own members or access rules, or if the index grows too large to search quickly.
 
 ### Connections between arms
 
@@ -156,7 +168,7 @@ Added 2026-11-13 after a second discussion. The owner stays the owner of every a
 
 - `conventions.yaml`: a list of `arms`, a tag list per arm, and the field `arms:`.
 - `check_vault.py`: file names must be unique across arms, and `arms:` values must be in the list.
-- `kb_pkg`: one index per arm, an `arm=` filter, and merged search with the model check.
+- `kb_pkg`: an `arm` label and a `docs` source type on every passage; `arm=` and `source_type=` filters in `search_kb`.
 - `import_paper.py`: becomes the curators' ingestion tool (§10).
 - New index-keeper job: semantic suggestions between arms.
 

@@ -57,7 +57,11 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
 
 - `lookup_column(table, column)`, `find_columns(text, table)`: exact Gaia column facts.
 - `search_kb(query, source_type, author, arm)`: passages by meaning. Cite source and page/line.
-- Each arm has its own index; all indexes use the same embedding model.
+  With no filter it searches everything (all arms, papers, code, documentation).
+  `arm="<arm>"` keeps one topic; `source_type="note" | "paper" | "code" | "docs"` keeps one
+  kind of source. One index, one embedding model; every passage is labelled with its arm.
+- A question about a column and its uses: `lookup_column` for the table entry, then
+  `search_kb` with no filter for how notes, papers and code use it.
 
 ## Layout
 
