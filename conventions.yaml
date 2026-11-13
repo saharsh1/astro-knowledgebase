@@ -87,6 +87,7 @@ name_patterns:
   lesson: '^\d{4}-\d{2}-\d{2} - (?P<author>[A-Za-z0-9-]+) - .+$'
   discussion: '^.+ - \d{4}-\d{2}-\d{2} \d{4} - (?P<author>[A-Za-z0-9-]+)$'
   request: '^\d{4}-\d{2}-\d{2} - (?P<author>[A-Za-z0-9-]+) - .+$'
+  topic: '^Topic - .+ - (?P<author>[A-Za-z0-9-]+) - \d{4}-\d{2}-\d{2}$'
 
 # Characters not allowed in note file names.
 forbidden_filename_chars: [":", "?", "*", "\"", "<", ">", "|", "^", "#", "[", "]"]

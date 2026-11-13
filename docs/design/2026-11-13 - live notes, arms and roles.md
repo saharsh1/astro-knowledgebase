@@ -78,7 +78,7 @@ The pull request was the point where a check ran and a person looked. With live 
 
 ## 6. `/consolidate` and `/resolve`
 
-- **`/consolidate <topic>`** merges the group's own notes on one topic into a new note, `live/topics/Topic - <topic> - <date>.md`.
+- **`/consolidate <topic>`** merges the group's own notes on one topic into a new note, `live/<arm>/topics/Topic - <topic> - <author> - <date>.md` (the author in the name, so two people never write the same file).
   - **Finding the notes:** `applies_to` first, then tags, then `search_kb(source_type="note")`. It shows the list before it writes.
   - **Sections:** current state (each line cited), duplicates, contradictions (side by side, never resolved by Claude), superseded notes, and open questions.
   - **The source notes are never changed.** The frontmatter lists them in `consolidates: [...]`, and the generated Home and indexes mark them "consolidated into …".

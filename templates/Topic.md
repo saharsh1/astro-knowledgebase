@@ -1,5 +1,5 @@
 ---
-title: "Topic - {{topic}} - {{date}}"
+title: "Topic - {{topic}} - <author> - {{date}}"
 type: topic
 author: <GitHub username>
 created: {{date}}
@@ -24,3 +24,5 @@ tags: []
 ## Open questions
 
 ## Sources consolidated
+
+<!-- File: live/<arm>/topics/Topic - <topic> - <author> - <YYYY-MM-DD>.md -->

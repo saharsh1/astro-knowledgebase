@@ -74,8 +74,8 @@ author: bob
 created: 2026-11-13
 tags: []
 """, "Confirmed.")
-    note(live / "binary-stars/topics/Topic - NSS units - 2026-11-13.md", """
-title: Topic - NSS units - 2026-11-13
+    note(live / "binary-stars/topics/Topic - NSS units - alice - 2026-11-13.md", """
+title: Topic - NSS units - alice - 2026-11-13
 type: topic
 author: alice
 created: 2026-11-13

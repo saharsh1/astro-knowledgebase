@@ -20,3 +20,4 @@ scripts/config.local
 __pycache__/
 *.pdf
 .DS_Store
+.resolve-trash/
