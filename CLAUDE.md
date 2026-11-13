@@ -92,6 +92,8 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
   `search_kb` with no filter for how notes, papers and code use it.
 - Start a session with `/sync` (`python scripts/sync.py`): skeleton, Keeper libraries, code
   checkouts and index brought up to date, one line per step.
+- The notes' history: dated snapshots in `keeper/snapshots/` (`scripts/snapshot_notes.py`, owner only;
+  `--restore <snapshot> [--note <name>]` writes into `outbox/`).
 - A new machine: `bash scripts/setup.sh`. When search or a skill misbehaves: `python scripts/doctor.py`
   (changes nothing; one line per check).
 - Your index is `index/`: `cd scripts && HF_HUB_OFFLINE=1 python -m kb_pkg.index` adds what is new.

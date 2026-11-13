@@ -11,7 +11,7 @@ private while this repository is public.
 
 Each version records: who built it and when, the model and its pinned revision, a hash of the
 indexing code, the skeleton commit, a hash of the note list (path + content of every note in
-live/ and keeper/generated/), a hash of keeper/locks/ (the data files), the code pins, passages
+live/ and keeper/generated/), the newest notes snapshot, a hash of keeper/locks/ (the data files), the code pins, passages
 per source type and per arm, the build time, and what was added, updated or removed.
 
 Members do not need the published index: their own `python -m kb_pkg.index` adds what is new.
@@ -85,6 +85,12 @@ def notes_hash(manifest: dict) -> str:
         if k.endswith(".md"):
             h.update(f"{k} {manifest[k].split(' ')[0]}\n".encode())
     return h.hexdigest()[:16]
+
+
+def latest_snapshot() -> str | None:
+    """Name of the newest notes snapshot (scripts/snapshot_notes.py), for the record."""
+    import snapshot_notes
+    return snapshot_notes.latest_name()
 
 
 def is_index_keeper(user: str) -> bool:
@@ -213,6 +219,7 @@ def publish(device: str, keep: int, embedder=None, check: bool = True, from_loca
             "skeleton_commit": sh("git", "rev-parse", "--short=12", "HEAD")[1], "skeleton_base": base,
             "notes": sum(1 for k in new_manifest if k.endswith(".md")), "notes_hash": notes_hash(new_manifest),
             "keeper_locks_hash": tree_hash(KEEPER / "locks"),
+            "notes_snapshot": latest_snapshot(),
             "code_pins": pins, "sources": len(new_manifest),
             "passages": sum(by_type.values()), "passages_by_type": by_type, "passages_by_arm": by_arm,
             "build_seconds": round(time.time() - t0), "build": stats,

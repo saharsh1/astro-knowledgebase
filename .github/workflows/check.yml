@@ -23,4 +23,5 @@ jobs:
       - run: python scripts/test_notes_flow.py
       - run: python scripts/test_consolidate_resolve.py
       - run: python scripts/test_paper_text.py
+      - run: python scripts/test_snapshot_notes.py
       - run: python scripts/test_build_software.py

@@ -80,7 +80,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         root = Path(t) / "vault"
         (root / "scripts").mkdir(parents=True)
-        for s in ("kb_common.py", "publish_index.py", "check_vault.py"):
+        for s in ("kb_common.py", "publish_index.py", "check_vault.py", "snapshot_notes.py"):
             shutil.copy(REPO / "scripts" / s, root / "scripts")
         shutil.copytree(REPO / "scripts/kb_pkg", root / "scripts/kb_pkg",
                         ignore=shutil.ignore_patterns("__pycache__"))

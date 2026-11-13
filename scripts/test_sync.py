@@ -80,7 +80,7 @@ def main() -> int:
         tmp = Path(t)
         owner, origin, member = tmp / "owner", tmp / "origin.git", tmp / "member"
         (owner / "scripts").mkdir(parents=True)
-        for s in ("kb_common.py", "publish_index.py", "sync.py", "fetch_code.py"):
+        for s in ("kb_common.py", "publish_index.py", "sync.py", "fetch_code.py", "snapshot_notes.py"):
             shutil.copy(REPO / "scripts" / s, owner / "scripts")
         shutil.copytree(REPO / "scripts/kb_pkg", owner / "scripts/kb_pkg", ignore=shutil.ignore_patterns("__pycache__"))
         (owner / "scripts/build").mkdir()

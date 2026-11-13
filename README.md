@@ -58,7 +58,10 @@ access to them, the skeleton still runs its checks and tests.
   so a hit says where it is from. The headings are told by their font when the paper text is
   cleaned (`paper_text.py`): 1,922 headings in the 56 papers, numbered lists excluded. Measured on
   the 30 questions: first 19, top 3 26, top 5 29, top 10 30.
-- To come: the snapshot script.
+- Built: `scripts/snapshot_notes.py` (owner): a dated zip of all notes in `keeper/snapshots/` and a
+  report of what changed since the one before (new, changed, deleted, author changed, conflict
+  copies, review markers); `--restore` writes into `outbox/`. Each index version names the newest
+  snapshot. First snapshot: `notes-2026-11-13`.
 
 The design is in `docs/design/`.
 
@@ -72,6 +75,7 @@ python scripts/test_check_vault.py
 python scripts/test_notes_flow.py
 python scripts/test_consolidate_resolve.py
 python scripts/test_paper_text.py
+python scripts/test_snapshot_notes.py
 python scripts/test_build_software.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
 python scripts/test_publish_index.py   # needs lancedb
