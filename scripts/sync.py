@@ -48,7 +48,7 @@ def rules_version(rev: str) -> str:
     return str(yaml.safe_load(text).get("version")) if code == 0 else "?"
 
 
-def skeleton(offline: bool) -> None:
+def skeleton(offline: bool, apply: bool = True) -> None:
     _, branch = git("rev-parse", "--abbrev-ref", "HEAD")
     _, dirty = git("status", "--porcelain", "--untracked-files=no")
     _, remotes = git("remote")
@@ -79,6 +79,12 @@ def skeleton(offline: bool) -> None:
         return
     if behind == "0":
         say("OK", "skeleton", "up to date with GitHub")
+        return
+    if not apply:
+        v = rules_version("origin/main")
+        say("WARN", "skeleton", f"{behind} commit(s) behind GitHub"
+            + (f" (rules version {v} there, {rules_version('HEAD')} here)" if v != rules_version("HEAD") else "")
+            + ": run /sync")
         return
     before = git("rev-parse", "HEAD")[1]
     code, out = git("merge", "--ff-only", "-q", "origin/main")
@@ -133,7 +139,7 @@ def keeper(full: bool) -> None:
         say("WARN", "outbox/", f"{len(drafts)} draft(s) not shared yet: /publish them when ready")
 
 
-def code(offline: bool) -> None:
+def code(offline: bool, apply: bool = True) -> None:
     import yaml
     repos = yaml.safe_load((ROOT / "sources.yaml").read_text())["repositories"]
     off = []
@@ -145,8 +151,8 @@ def code(offline: bool) -> None:
     if not off:
         say("OK", "code", f"{len(repos)} checkout(s) at their pins")
         return
-    if offline:
-        say("WARN", "code", f"not at the pin: {', '.join(off)} (--offline: not fetched)")
+    if offline or not apply:
+        say("WARN", "code", f"not at the pin: {', '.join(off)}: run /sync")
         return
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "fetch_code.py"), *off],
                        cwd=ROOT, capture_output=True, text=True)
@@ -156,18 +162,33 @@ def code(offline: bool) -> None:
         say("DONE", "code", f"checked out at the pin: {', '.join(off)}")
 
 
-def index(build: bool) -> None:
+def index(build: bool, apply: bool = True) -> None:
     import publish_index as pi
     from kb_pkg import config, index as kb_index
     from kb_pkg.store import Store
     before = pi.meta_of(pi.LOCAL).get("version")
-    try:
-        pi.pull()
-    except SystemExit as e:
-        say("WARN", "published index", str(e))
+    published = pi.meta_of(pi.CURRENT)
+    reported = False
+    if not apply:
+        if published and published.get("model_revision") != config.model_revision():
+            say("FAIL", "published index", "made with another model revision than this clone's: run /sync")
+            reported = True
+        elif published and published.get("version") != before:
+            say("WARN", "published index", f"version {published['version']} is published, "
+                                           f"this machine has {before or 'its own build'}: run /sync")
+            reported = True
+        build = False
+    else:
+        try:
+            pi.pull()
+        except SystemExit as e:
+            say("WARN", "published index", str(e))
+            reported = True
     after = pi.meta_of(pi.LOCAL).get("version")
     if after != before:
         say("DONE", "published index", f"copied version {after}")
+    elif reported:
+        pass
     elif after:
         say("OK", "published index", f"local copy is version {after}")
     elif not (config.INDEX_DIR / "manifest.json").exists():
@@ -181,7 +202,7 @@ def index(build: bool) -> None:
         return
     what = ", ".join(f"{n} {k}" for k, n in todo.items())
     if not build:
-        say("WARN", "search index", f"{what}: cd scripts && HF_HUB_OFFLINE=1 python -m kb_pkg.index")
+        say("WARN", "search index", f"{what}: run /sync (or cd scripts && HF_HUB_OFFLINE=1 python -m kb_pkg.index)")
         return
     env = {**os.environ, "HF_HUB_OFFLINE": os.environ.get("HF_HUB_OFFLINE", "1")}
     r = subprocess.run([sys.executable, "-W", "ignore", "-m", "kb_pkg.index"], cwd=ROOT / "scripts",
