@@ -23,7 +23,7 @@ from pathlib import Path
 from kb_common import CONV, LIVE, ROOT, frontmatter
 
 LINK = re.compile(r"\[\[([^\]|#]+)")
-SKIP_TYPES = {"bibtex", "request", "gaia-table", "gaia-section", "code-usage", "hub"}
+SKIP_TYPES = {"bibtex", "request", "gaia-table", "gaia-section", "code-summary", "hub"}
 
 
 def as_list(v) -> list:

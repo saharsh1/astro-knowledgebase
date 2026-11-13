@@ -27,8 +27,10 @@ access to them, the skeleton still runs its checks and tests.
 - Built: the papers on ESA's DR3 and EDR3 papers pages (57), `scripts/build/gaia_papers.py DR3|EDR3`
   (arm `gaia`; metadata from Crossref and arXiv, no token needed; PDFs from arXiv), and
   their cleaned text, `scripts/build/paper_text.py` (ligatures, split words, reference lists).
-- Next: `scripts/build/`: the code documentation (the `software` arm); then a fresh index;
-  the DR4 papers and documentation at the release. Nothing is imported from the
+- Built: the `software` arm's generated part: the five pinned repositories checked out
+  (`scripts/fetch_code.py`), the Gaia columns their code reads (`scripts/build/code_usage.py`),
+  and one summary note per repository (`scripts/build/software_docs.py`).
+- Next: a fresh index; the DR4 papers and documentation at the release. Nothing is imported from the
   old binary stars knowledge base.
 - To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
   script.
@@ -45,6 +47,7 @@ python scripts/test_check_vault.py
 python scripts/test_notes_flow.py
 python scripts/test_consolidate_resolve.py
 python scripts/test_paper_text.py
+python scripts/test_build_software.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
 python scripts/test_build_datamodel.py  # needs pymupdf; checks the DR4 draft if keeper/ has it
 python scripts/test_build_docs.py --real # needs beautifulsoup4; checks the DR3 build if keeper/ has it

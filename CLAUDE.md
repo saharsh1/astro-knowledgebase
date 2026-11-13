@@ -61,7 +61,7 @@ plus every arm whose notes cite it (generated).
 | Layer | Arm | Holds |
 |---|---|---|
 | 0 | `gaia` | What the Gaia data and documentation say: column, flag and unit lessons, selection criteria, validation results; by label, the Gaia Collaboration papers and the generated documentation (`keeper/generated/gaia/<release>/`) |
-| 1 | `software` | The code the group uses: code cards (`software/notes/<repo>.md`), recipes, pitfalls tied to `repo@commit`; by label, the code itself and `keeper/generated/software/` |
+| 1 | `software` | The code the group uses: code cards (`software/notes/<repo>.md`, `templates/Code card.md`), recipes, pitfalls tied to `repo@commit`; by label, the code itself (checked out in `external/` at its pin by `scripts/fetch_code.py`) and the generated summaries `keeper/generated/software/Software - <repo>.md` |
 | 2 | `binary-stars`, `milky-way`, `hot-stars`, … | The science, and how it uses Gaia and the code |
 
 - **Links run down the layers only:** science → software → gaia. A note never links to a

@@ -72,7 +72,7 @@ types:
   paper: [arxiv, bibtex, arms]
   bibtex: []
   code-card: [repo, verified_at]
-  code-usage: [repo, generated]
+  code-summary: [repo, commit, generated]
   recipe: [repo, verified_at]
   gaia-table: [release, doc_version, generated]
   gaia-section: [release, doc_version, section]
@@ -94,7 +94,7 @@ type_places:
   code-card: [software/notes]
   recipe: [arm:notes]
   request: [requests]
-  code-usage: [generated]
+  code-summary: [generated]
   gaia-table: [generated]
   gaia-section: [generated]
 
