@@ -28,7 +28,7 @@ def extract_paper(path: Path) -> tuple[list[tuple[int, str]], str]:
             pages = []
             for p in d["pages"]:
                 t = p["text"]
-                for a, b in sorted(p["references"], reverse=True):
+                for a, b in sorted(p["references"] + p.get("authors", []), reverse=True):
                     t = t[:a] + t[b:]
                 pages.append((p["page"], t))
             return pages, "cleaned"

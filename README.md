@@ -33,8 +33,9 @@ access to them, the skeleton still runs its checks and tests.
 - Built: the first index of all of it (local `index/`, 2026-11-13): 21,215 passages from
   1,086 sources, 56 min on Apple MPS: Gaia documentation 12,698, papers 5,038, code 3,181,
   notes 298. BibTeX notes are not indexed.
-- Next: drop author and affiliation lists from the paper text (they rank high for some
-  queries); `/publish-index`; the DR4 papers and documentation at the release. Nothing is imported from the
+- The paper text leaves out reference lists and author and affiliation lists (Gaia
+  Collaboration papers list hundreds of authors, which ranked high in search).
+- Next: `/publish-index`; the DR4 papers and documentation at the release. Nothing is imported from the
   old binary stars knowledge base.
 - To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
   script.

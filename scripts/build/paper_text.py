@@ -9,7 +9,9 @@ each page after three repairs, and the counts of what was repaired:
     "two-body");
   - the reference list is marked, from its heading to the first appendix heading after it
     (A&A prints appendices after the references) or the end: `references` holds
-    [start, end) character ranges per page, which the index leaves out
+    [start, end) character ranges per page, which the index leaves out;
+  - author and affiliation lists are marked the same way (`authors`): Gaia Collaboration
+    papers list hundreds of authors, which otherwise rank high in search
     (kb_pkg/extract.py: extract_paper).
 A PDF whose SHA-256 matches the one recorded in its JSON is skipped.
 
@@ -37,7 +39,22 @@ ENTRY = re.compile(r"^[ \t]*(?:van |de |von |di |da |le |du )?[A-Z][A-Za-zÀ-ÿ'
                    r"[ \t]*(?:[A-Z][a-z]?\.|[A-Z]\.-[A-Z]\.)")                 # "Arenou, F." "Bailer-Jones, C. A. L."
 CITED = re.compile(r"\b(19|20)\d\d[a-z]?\b.*\b(A&A|ApJ|ApJS|ApJL|AJ|MNRAS|PASP|PASJ|ARA&A|A&AS|AN|Nature|Science|Icarus|"
                    r"arXiv|Phys|J\.|Proc|SPIE|Messenger|IAU|in prep|submitted|accepted|Vol|ASP Conf)", re.I)
-VERSION = "2"
+VERSION = "4"
+NAME_INITIALS = re.compile(r"(?<![\w.])(?:[A-Z]\.(?:-?[A-Z]\.)*)\s?(?:[a-z]+ )?[A-ZÀ-Ý][\w'’\-]+")    # "M.M.S. Marcos"
+NAME_FULL = re.compile(r"\b[A-ZÀ-Ý][a-zà-ÿ]+(?:-[A-Z][a-zà-ÿ]+)? [A-ZÀ-Ý][a-zà-ÿ'’\-]+\*?†?\d")       # "Dimitri Pourbaix*2"
+AFFIL = re.compile(r"^\s*\d{1,3}\s*[A-Z(].*(Univ|Institu|Observ|Dep|Dept|Laborat|Cent|School|Facult|Agency|ESA\b|"
+                   r"ESO\b|INAF|CNRS|Academ|Space|Physi|Astro|Kapteyn|Planck|Sternwarte|Obs\.|Inst\.|Lab\.|"
+                   r"Fundaci|Research|Science|College|GEPI|IMCCE|Telespazio|ALTEC|Aurora|Serco|e-mail)")
+AFFIL_MID = re.compile(r"(?:^|[\s,.])\d{1,3}\s+(?:[A-Z][\w’'-]*\s+){0,4}(Univ|Institu|Observ|Dep|Dpto|Laborat|Lab\b|"
+                       r"School|Facult|Agency|INAF|CNRS|CNES|ESA\b|Academ|Research|College|Telespazio|Kapteyn|"
+                       r"Max Planck|Sternwarte|Osservatorio|Instituto|Istituto|Departament|Centr)")
+NUMBERED = re.compile(r"^\s*\d{1,3}\s+[A-ZÀ-Ý]")                     # "28 ALTEC S.p.a"
+COUNTRY = re.compile(r"(France|Italy|Spain|Germany|Belgium|Switzerland|United Kingdom|UK|Sweden|USA|Netherlands|"
+                     r"Portugal|Greece|Poland|Hungary|Israel|Finland|Denmark|Austria|Czech Republic|Slovenia|"
+                     r"Algeria|China|Japan|Chile|Australia|Canada|Brazil|Luxembourg|Estonia|Croatia|Serbia|"
+                     r"Slovakia|Lithuania|Norway|Ireland|Turkey|India|Argentina|Mexico|Cyprus|Ukraine|Russia)[.,;]?\s*$")
+STOP = re.compile(r"^\s*(ABSTRACT|Abstract|Received|Accepted|Key ?words|Context\.|\d+\.?\s+Introduction|INTRODUCTION)")
+FILLER = re.compile(r"^[\s\d,*†‡§]*$")
 
 
 def reference_lines(lines: list[str]) -> list[bool]:
@@ -55,8 +72,54 @@ def reference_lines(lines: list[str]) -> list[bool]:
     return out
 
 
+def author_lines(lines: list[str]) -> list[bool]:
+    """Which lines belong to an author or affiliation list. A line is a candidate when it
+    holds a name with initials or with an affiliation number, is a numbered affiliation, or
+    holds affiliation numbers only. Candidates closer than four lines form a stretch; a
+    stretch is marked when it has three strong lines (two names, or an affiliation) or six
+    names in all, so a sentence that mentions one person is never marked."""
+    names = [len(NAME_INITIALS.findall(l)) + len(NAME_FULL.findall(l)) for l in lines]
+    strong = [n >= 2 or ((bool(AFFIL.match(l)) or bool(AFFIL_MID.search(l))) and "http" not in l)
+              or l.strip().startswith("Authors:") for n, l in zip(names, lines)]
+    cand = [s or n >= 1 or (bool(FILLER.match(l)) and l.strip() != "") or bool(NUMBERED.match(l))
+            or bool(COUNTRY.search(l)) for s, n, l in zip(strong, names, lines)]
+    out = [False] * len(lines)
+    i = 0
+    while i < len(lines):
+        if not (strong[i] or names[i]):
+            i += 1
+            continue
+        j, last = i, i
+        while j < len(lines) and j - last <= 3 and not STOP.match(lines[j]):
+            if cand[j]:
+                last = j
+            j += 1
+        if sum(strong[i:last + 1]) >= 3 or sum(names[i:last + 1]) >= 6:
+            for k in range(i, last + 1):
+                out[k] = True
+        i = last + 1
+    return out
+
+
+def line_ranges(pages: list[str], flags_of) -> list[list[list[int]]]:
+    """Per page, the [start, end) ranges of the lines that flags_of(lines) marks."""
+    ranges: list[list[list[int]]] = []
+    for t in pages:
+        lines, pos, out = t.split("\n"), 0, []
+        for line, f in zip(lines, flags_of(lines)):
+            if f and line.strip():
+                if out and out[-1][1] >= pos - 1:
+                    out[-1][1] = pos + len(line)
+                else:
+                    out.append([pos, pos + len(line)])
+            pos += len(line) + 1
+        ranges.append(out)
+    return ranges
+
+
 def clean(pages: list[str]) -> tuple[list[str], list[list[list[int]]], dict]:
-    """(cleaned pages, reference ranges per page, counts)."""
+    """(cleaned pages, reference ranges per page, counts). The author and affiliation ranges
+    are in counts["authors"] (per page)."""
     n_lig = 0
     out = []
     for t in pages:
@@ -111,8 +174,11 @@ def clean(pages: list[str]) -> tuple[list[str], list[list[list[int]]], dict]:
                         ranges[i][-1][1] = hi - a
                     else:
                         ranges[i].append([lo - a, hi - a])
+    authors = line_ranges(out, author_lines)
+    a_chars = sum(b - a for page in authors for a, b in page)
     return out, ranges, {"ligatures": n_lig, "words_joined": joined, "hyphens_kept": kept,
-                         "references_found": bool(heads), "references_share": round(ref_chars / max(total, 1), 3)}
+                         "references_found": bool(heads), "references_share": round(ref_chars / max(total, 1), 3),
+                         "authors_share": round(a_chars / max(total, 1), 3), "authors": authors}
 
 
 def process(pdf: Path, out_dir: Path, force: bool = False) -> dict | None:
@@ -126,10 +192,11 @@ def process(pdf: Path, out_dir: Path, force: bool = False) -> dict | None:
     with pymupdf.open(pdf) as doc:
         raw = [p.get_text("text") for p in doc]
     pages, ranges, stats = clean(raw)
+    authors = stats.pop("authors")
     out_dir.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"pdf": pdf.name, "sha256": sha, "version": VERSION, "stats": stats,
-                               "pages": [{"page": i + 1, "text": t, "references": r}
-                                         for i, (t, r) in enumerate(zip(pages, ranges))]},
+                               "pages": [{"page": i + 1, "text": t, "references": r, "authors": au}
+                                         for i, (t, r, au) in enumerate(zip(pages, ranges, authors))]},
                               ensure_ascii=False) + "\n")
     return stats
 
@@ -153,7 +220,7 @@ def main() -> int:
         if not s["references_found"]:
             no_refs.append(pdf.name)
         print(f"{s['ligatures']:5d} ligatures {s['words_joined']:5d} joined {s['hyphens_kept']:4d} kept "
-              f"refs {s['references_share']:.2f}  {pdf.name[:80]}")
+              f"refs {s['references_share']:.2f} authors {s['authors_share']:.2f}  {pdf.name[:70]}")
     print(f"\n{total['papers']} papers cleaned: {total['ligatures']} ligatures, {total['words_joined']} split "
           f"words joined, {total['hyphens_kept']} hyphens kept; no reference list found in {len(no_refs)}"
           + "".join(f"\n  {n}" for n in no_refs))
