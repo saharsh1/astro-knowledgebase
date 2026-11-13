@@ -55,7 +55,9 @@ access to them, the skeleton still runs its checks and tests.
   for all 30; 7.6 different sources per top 10. A result list holds at most 2 passages of one
   source (`per_source`); the documentation's bibliography is not indexed.
 - Each paper passage starts with its paper's title and section (found from the numbered headings),
-  so a hit says where it is from. Measured on the 30 questions: first 20, top 3 27, top 5 29.
+  so a hit says where it is from. The headings are told by their font when the paper text is
+  cleaned (`paper_text.py`): 1,922 headings in the 56 papers, numbered lists excluded. Measured on
+  the 30 questions: first 19, top 3 26, top 5 29, top 10 30.
 - To come: the snapshot script.
 
 The design is in `docs/design/`.

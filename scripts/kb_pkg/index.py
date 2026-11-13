@@ -120,7 +120,8 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
 
 def chunks_for(source_id: str, kind: str, path: Path, extra: dict, count=None):
     if kind == "paper":
-        return chunk.chunk_paper(source_id, extract.extract_paper(path)[0], count=count)
+        return chunk.chunk_paper(source_id, extract.extract_paper(path)[0], count=count,
+                                 headings=extract.paper_headings(path))
     if kind == "code":
         return chunk_code_file(extra["repo"], extra["rel"], path, count=count)
     text = path.read_text(encoding="utf-8", errors="replace")

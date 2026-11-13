@@ -39,7 +39,7 @@ ENTRY = re.compile(r"^[ \t]*(?:van |de |von |di |da |le |du )?[A-Z][A-Za-zÀ-ÿ'
                    r"[ \t]*(?:[A-Z][a-z]?\.|[A-Z]\.-[A-Z]\.)")                 # "Arenou, F." "Bailer-Jones, C. A. L."
 CITED = re.compile(r"\b(19|20)\d\d[a-z]?\b.*\b(A&A|ApJ|ApJS|ApJL|AJ|MNRAS|PASP|PASJ|ARA&A|A&AS|AN|Nature|Science|Icarus|"
                    r"arXiv|Phys|J\.|Proc|SPIE|Messenger|IAU|in prep|submitted|accepted|Vol|ASP Conf)", re.I)
-VERSION = "4"
+VERSION = "5"      # 5: section headings, told by their font
 NAME_INITIALS = re.compile(r"(?<![\w.])(?:[A-Z]\.(?:-?[A-Z]\.)*)\s?(?:[a-z]+ )?[A-ZÀ-Ý][\w'’\-]+")    # "M.M.S. Marcos"
 NAME_FULL = re.compile(r"\b[A-ZÀ-Ý][a-zà-ÿ]+(?:-[A-Z][a-zà-ÿ]+)? [A-ZÀ-Ý][a-zà-ÿ'’\-]+\*?†?\d")       # "Dimitri Pourbaix*2"
 AFFIL = re.compile(r"^\s*\d{1,3}\s*[A-Z(].*(Univ|Institu|Observ|Dep|Dept|Laborat|Cent|School|Facult|Agency|ESA\b|"
@@ -181,6 +181,74 @@ def clean(pages: list[str]) -> tuple[list[str], list[list[list[int]]], dict]:
                          "authors_share": round(a_chars / max(total, 1), 3), "authors": authors}
 
 
+HEAD_NUM = re.compile(r"^(\d{1,2})((?:\.\d{1,2}){0,2})\.\s+\S")          # "3. Title", "3.2. Title"
+HEAD_APPX = re.compile(r"^Appendix\s+([A-Z])\b")                        # "Appendix A: Title"
+HEAD_APPX_SUB = re.compile(r"^([A-Z])((?:\.\d{1,2}){1,2})\.\s+\S")       # "A.1. Title"
+
+
+def family(font: str) -> str:
+    return re.split(r"[-,]", font)[0]
+
+
+def headings(doc) -> list[list[dict]]:
+    """Per page, the section headings: lines that start like a heading ("3. Title",
+    "3.2. Title", "Appendix A: Title", "A.1. Title") AND are set in another font family than
+    the body text. A main heading also has the font of the first one ("1. ...") and the next
+    number; a subsection has the number of its section. Journals set headings in their own font (A&A: sans-serif bold or slanted);
+    a numbered list in the text has the same shape but the body font, so it is not a heading.
+    A heading that runs over several lines is joined. Each: {"line": its first line as in
+    the cleaned text, "title": the whole heading, "level": 1 (section or appendix) or 2}."""
+    chars = Counter()
+    pages = []
+    for page in doc:
+        lines = []
+        for b in page.get_text("dict")["blocks"]:
+            for l in b.get("lines", []):
+                spans = [s for s in l["spans"] if s["text"].strip()]
+                if spans:
+                    for s in spans:
+                        chars[family(s["font"])] += len(s["text"])
+                    lines.append(("".join(s["text"] for s in l["spans"]).strip(), spans[0]["font"],
+                                  round(spans[0]["size"], 1), b["number"]))
+        pages.append(lines)
+    body = chars.most_common(1)[0][0] if chars else ""
+    # The font of the main headings: that of the first "1. Title" line outside the body font.
+    main = next(((font, size) for lines in pages for text, font, size, _ in lines
+                 if family(font) != body and (m := HEAD_NUM.match(text)) and m.group(1) == "1" and not m.group(2)), None)
+    out, top = [], 0                                     # top: number of the current section
+    for lines in pages:
+        found, i = [], 0
+        while i < len(lines):
+            text, font, size, block = lines[i]
+            i += 1
+            m, a, s = HEAD_NUM.match(text), HEAD_APPX.match(text), HEAD_APPX_SUB.match(text)
+            if family(font) == body or not (m or a or s):
+                continue
+            if m and not m.group(2):                     # "3. Title": the main font, and the next number
+                if (font, size) != main or int(m.group(1)) != top + 1:
+                    continue                             # e.g. a run-in paragraph title "1. Completeness."
+                top = int(m.group(1))
+            elif m and int(m.group(1)) != top:           # "3.2. Title" belongs to section 3
+                continue
+            elif a:
+                top = 99                                 # appendices: no numbered section follows
+            title, more = text, 0
+            # The heading goes on over the next lines while they are not body text and not a new
+            # heading (a column name inside a heading has its own font; at most 3 more lines).
+            while i < len(lines) and more < 3 and family(lines[i][1]) != body and not (
+                    HEAD_NUM.match(lines[i][0]) or HEAD_APPX.match(lines[i][0]) or HEAD_APPX_SUB.match(lines[i][0])):
+                title += " " + lines[i][0]
+                i += 1
+                more += 1
+            sub_appendix = a and re.match(r"^Appendix\s+[A-Z]\.\d", text)
+            level = 1 if (a and not sub_appendix) or (m and not m.group(2)) else 2
+            for k, v in LIGATURES.items():
+                text, title = text.replace(k, v), title.replace(k, v)
+            found.append({"line": text, "title": re.sub(r"\s+", " ", title), "level": level})
+        out.append(found)
+    return out
+
+
 def process(pdf: Path, out_dir: Path, force: bool = False) -> dict | None:
     import pymupdf
     sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
@@ -191,12 +259,19 @@ def process(pdf: Path, out_dir: Path, force: bool = False) -> dict | None:
             return None
     with pymupdf.open(pdf) as doc:
         raw = [p.get_text("text") for p in doc]
+        heads = headings(doc)
     pages, ranges, stats = clean(raw)
     authors = stats.pop("authors")
+    # a heading counts only if its first line is found as a line of the cleaned page text
+    for t, hs in zip(pages, heads):
+        have = {l.strip() for l in t.split("\n")}
+        hs[:] = [h for h in hs if h["line"] in have or stats.__setitem__("headings_lost", stats.get("headings_lost", 0) + 1)]
+    stats["sections"] = sum(1 for hs in heads for h in hs if h["level"] == 1)
+    stats["subsections"] = sum(1 for hs in heads for h in hs if h["level"] == 2)
     out_dir.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"pdf": pdf.name, "sha256": sha, "version": VERSION, "stats": stats,
-                               "pages": [{"page": i + 1, "text": t, "references": r, "authors": au}
-                                         for i, (t, r, au) in enumerate(zip(pages, ranges, authors))]},
+                               "pages": [{"page": i + 1, "text": t, "references": r, "authors": au, "headings": h}
+                                         for i, (t, r, au, h) in enumerate(zip(pages, ranges, authors, heads))]},
                               ensure_ascii=False) + "\n")
     return stats
 

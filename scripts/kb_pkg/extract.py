@@ -16,6 +16,19 @@ def extract_pdf(path: Path) -> list[tuple[int, str]]:
     return pages
 
 
+def paper_headings(path: Path) -> dict[int, list[dict]] | None:
+    """page -> section headings of a paper, from its cleaned text (told by font,
+    scripts/build/paper_text.py); None when the paper has no cleaned text of this file."""
+    from . import config
+    f = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
+    if not f.exists():
+        return None
+    d = json.loads(f.read_text())
+    if d.get("sha256") != hashlib.sha256(path.read_bytes()).hexdigest() or "headings" not in (d["pages"] or [{}])[0]:
+        return None
+    return {p["page"]: p["headings"] for p in d["pages"]}
+
+
 def extract_paper(path: Path) -> tuple[list[tuple[int, str]], str]:
     """([(page, text)], how) of a paper PDF: the cleaned text without the reference list
     (keeper/parsed/papers/<name>.json, from scripts/build/paper_text.py) when it exists and

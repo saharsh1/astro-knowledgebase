@@ -54,18 +54,46 @@ def _plan(words: list[str], count: Counter, budget: int | None = None):
     return count(words), (budget or MAX_TOKENS), OVERLAP_TOKENS
 
 
-PAPER_CHUNKS = "2"      # 2 (2026-11-13): each passage starts with the paper's title and section
+PAPER_CHUNKS = "3"      # 2: each passage starts with the paper's title and section; 3: headings told by font
 _SECTION = re.compile(r"^(\d{1,2})((?:\.\d{1,2}){0,2})\.\s+([A-Z][^\n]{2,90})$")
 _APPENDIX = re.compile(r"^Appendix\s+([A-Z])\s*:\s*([A-Z][^\n]{2,90})$")
 
 
-def paper_sections(pages) -> list[tuple[str, int, str]]:
-    """(word, page, section) for every word of a paper. A section heading is a line
+def paper_sections(pages, headings=None) -> list[tuple[str, int, str]]:
+    """(word, page, section) for every word of a paper.
+
+    With ``headings`` (page -> [{"line", "title", "level"}], recorded by
+    scripts/build/paper_text.py from the fonts of the PDF): a line that equals a recorded
+    heading's first line starts that section (level 1) or subsection (level 2). This is the
+    reliable way: a numbered list in the text looks like a heading but is not recorded.
+
+    Without (a paper with no cleaned text): the shape of the lines. A section heading is a line
     "3. Title" or "3.2. Title" (number, period, capital; at most 12 words; no closing
     comma, semicolon or period) whose number continues the count: the next section, or a
     subsection of the current one. Footnotes (no period after the number) and numbered list
     items (a full line whose next line goes on in lower case) do not pass. The
     section of a subsection is "3. Title / 3.2. Title". Also "Appendix A: Title"."""
+    if headings is not None:
+        out, top, sub = [], "", ""
+        for page_no, text in pages:
+            todo = list(headings.get(page_no, []))
+            lines = [l.strip() for l in text.splitlines()]
+            skip = 0
+            for i, s in enumerate(lines):
+                if todo and s == todo[0]["line"]:
+                    h = todo.pop(0)
+                    top, sub = (h["title"], "") if h["level"] == 1 else (top, h["title"])
+                    # the heading's own lines (it may run over several) are named by the title line
+                    rest, skip = h["title"][len(h["line"]):].split(), 1
+                    while rest and i + skip < len(lines) and lines[i + skip].split() == rest[:len(lines[i + skip].split())]:
+                        rest, skip = rest[len(lines[i + skip].split()):], skip + 1
+                if skip:
+                    skip -= 1
+                    continue
+                section = f"{top} / {sub}" if sub else top
+                out += [(w, page_no, section) for w in s.split()]
+        return out
+
     out, top_n, top, sub = [], 0, "", ""
     for page_no, text in pages:
         lines = [l.strip() for l in text.splitlines()]
@@ -90,7 +118,7 @@ def paper_sections(pages) -> list[tuple[str, int, str]]:
     return out
 
 
-def chunk_paper(source_id, pages, *, words=None, overlap=None, count: Counter = None):
+def chunk_paper(source_id, pages, *, words=None, overlap=None, count: Counter = None, headings=None):
     """Windows over the concatenated pages, tracking page spans and sections. Each passage
     starts with a line "<paper title> — <section>", so a passage from the middle of a
     paper still says which paper and which part it is from (the window is shortened by the
@@ -99,7 +127,7 @@ def chunk_paper(source_id, pages, *, words=None, overlap=None, count: Counter = 
     ``words``/``overlap`` force word windows (as before 2026-11-10); otherwise the
     windows are sized in tokens when ``count`` is given, in words when not.
     """
-    tagged = paper_sections(pages)
+    tagged = paper_sections(pages, headings)
     if not tagged:
         return []
 
