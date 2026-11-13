@@ -77,7 +77,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
     for p, fm, arm in notes:
         if arm:
             for target in WIKILINK.findall(p.read_text(encoding="utf-8", errors="replace")):
-                target = target.strip()
+                target = target.strip().rstrip("\\")
                 if target in cited:
                     cited[target].add(arm)
 

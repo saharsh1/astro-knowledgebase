@@ -21,7 +21,10 @@ access to them, the skeleton still runs its checks and tests.
 - Built: the DR4 **draft** data model (2026-06-26), `scripts/build/gaia_datamodel.py DR4-draft`:
   141 tables, 4,629 columns, labelled `DR4-draft` everywhere; replaced by the formal DR4
   data model at the release (planned 2 December 2026).
-- Next: `scripts/build/`: the DR3 documentation and data model, the verification papers from ESA's papers pages (with PDF
+- Built: the DR3 documentation 1.3, `scripts/build/gaia_docs.py DR3`: a snapshot of the
+  646 web pages; 94 data-model tables, 2,093 columns, checked against the archive's own
+  column list; 552 section notes with links between pages and to columns.
+- Next: `scripts/build/`: the verification papers from ESA's papers pages (with PDF
   text cleaning), the code documentation; then a fresh index. Nothing is imported from the
   old binary stars knowledge base.
 - To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
@@ -40,6 +43,7 @@ python scripts/test_notes_flow.py
 python scripts/test_consolidate_resolve.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
 python scripts/test_build_datamodel.py  # needs pymupdf; checks the DR4 draft if keeper/ has it
+python scripts/test_build_docs.py --real # needs beautifulsoup4; checks the DR3 build if keeper/ has it
 ```
 
 Licences: MIT for the code (`LICENSE`), CC BY 4.0 for the text (`LICENSE-docs.md`).

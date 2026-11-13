@@ -210,7 +210,7 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                 warnings.append(f"{rel}: contains '{marker}' — check it is not from an internal (non-public) document")
 
     body = COMMENT.sub("", FENCE.sub("", text))
-    targets += [t.strip() for t in WIKILINK.findall(body)]
+    targets += [t.strip().rstrip("\\") for t in WIKILINK.findall(body)]   # [[a\|b]] inside a table
     if arm and place != "generated":                # links run down the layers: science -> software -> gaia
         for target in sorted(set(targets)):
             other = stems.get(target)
@@ -219,7 +219,7 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                               f"(layer {v.layer(other)}); links run from higher layers to lower ones only, "
                               f"so put this link in a note of {other}")
     for target in WIKILINK.findall(body):
-        target = target.strip()
+        target = target.strip().rstrip("\\")
         if ATTACHMENT.search(target) or target in stems:
             continue
         msg = f"{rel}: link [[{target}]] does not resolve"
