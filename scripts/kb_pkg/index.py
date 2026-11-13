@@ -138,6 +138,33 @@ def label_key(extra: dict) -> str:
     return f"{extra.get('stype', '')};{extra.get('arms', '')}"
 
 
+def content_hash(kind: str, path: Path) -> str:
+    """The hash the manifest keeps for a source: its file, and for a paper also its cleaned text."""
+    h = file_hash(path)
+    if kind == "paper":
+        cj = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
+        if cj.exists():
+            h += ":" + file_hash(cj)[:16]
+    return h
+
+
+def pending(store) -> dict:
+    """What build() would do, without embedding anything: lists of source ids that are new,
+    changed (to embed again), relabelled (labels only) and removed."""
+    manifest, found = store.read_manifest(), discover()
+    out = {"new": [], "changed": [], "relabelled": [], "removed": sorted(s for s in manifest if s not in found)}
+    for sid, (kind, path, extra) in found.items():
+        if sid not in manifest:
+            out["new"].append(sid)
+            continue
+        old_h, _, old_key = manifest[sid].partition(" ")
+        if old_h != content_hash(kind, path):
+            out["changed"].append(sid)
+        elif old_key != label_key(extra):
+            out["relabelled"].append(sid)
+    return out
+
+
 def build(store, embedder, *, rebuild=False, progress=False) -> dict:
     manifest = {} if rebuild else store.read_manifest()
     if rebuild:
@@ -156,11 +183,7 @@ def build(store, embedder, *, rebuild=False, progress=False) -> dict:
     new_manifest: dict[str, str] = {}
     try:
         for source_id, (kind, path, extra) in found.items():
-            h, key = file_hash(path), label_key(extra)
-            if kind == "paper":                             # the cleaned text counts as part of the paper
-                cj = config.KEEPER_DIR / "parsed" / "papers" / (path.name + ".json")
-                if cj.exists():
-                    h += ":" + file_hash(cj)[:16]
+            h, key = content_hash(kind, path), label_key(extra)
             new_manifest[source_id] = f"{h} {key}"
             old_h, _, old_key = manifest.get(source_id, "").partition(" ")
             if old_h == h and old_key == key:
