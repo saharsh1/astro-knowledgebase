@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "astro-kb": {
+      "command": "bash",
+      "args": ["scripts/kb_server.sh"]
+    }
+  }
+}

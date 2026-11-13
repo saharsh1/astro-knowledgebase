@@ -1,0 +1,108 @@
+# Rules version and machine-readable conventions. Read by scripts/check_vault.py and
+# scripts/kb_pkg/config.py. Only the owner changes this file. Each change: raise
+# `version`, add a changelog line, and ship a migration script under scripts/migrations/
+# if existing notes must change.
+version: 1
+
+changelog:
+  - "1 (2026-11-13): first version of the astro knowledge base (arms, live notes)."
+
+# Roles. Keeper's access per library enforces them; the skills read this list only to
+# choose which path to offer (/ingest for curators, /request-paper for members).
+owner: saharsh1
+curators: [saharsh1]
+
+# Where things are, relative to the repository root.
+live_dir: live            # Keeper library "astro-kb-notes"
+keeper_dir: keeper        # Keeper library "astro-kb-data"
+outbox_dir: outbox        # local drafts
+
+# Topical arms: folders live/<arm>/ with these sub-folders. Each arm adds its own tags.
+arm_folders: [notes, lessons, topics, discussion]
+arms:
+  binary-stars:
+    title: Binary stars
+    tags: [AstrometricBinaries, SpectroscopicBinaries, EclipsingBinaries, NSS, Orbits,
+           CompactObjects, WhiteDwarfs, BrownDwarfs, SelectionFunction]
+  milky-way:
+    title: Milky Way
+    tags: [Kinematics, Populations, Extinction, Chemistry, SelectionFunction]
+  hot-stars:
+    title: Hot stars
+    tags: [OBStars, Winds, Rotation, Pulsations]
+
+# Folders of live/ shared by all arms.
+shared_folders: [papers, code, requests]
+
+# Folders of keeper/ that hold generated notes (written by the index keeper only).
+generated_folders: [generated]
+
+# Tags any note may use, in every arm.
+common_tags: [Gaia, Astrometry, RV, Photometry, Spectroscopy, SED, Software, DataModel]
+
+# Fields every note must have.
+required_common: [title, type, created, author, tags]
+
+# Note types and their extra required fields.
+types:
+  note: []
+  hub: []
+  paper: [arxiv, bibtex, arms]
+  bibtex: []
+  code-card: [repo, verified_at]
+  code-usage: [repo, generated]
+  recipe: [repo, verified_at]
+  gaia-table: [release, doc_version, generated]
+  gaia-section: [release, doc_version, section]
+  lesson: [kind, status, last_checked, applies_to]
+  discussion: [about]
+  topic: [consolidates]
+  request: [id, arm, reason]
+
+# Where each type may live: "arm" = live/<arm>/<folder>, or a shared/generated folder.
+type_places:
+  lesson: [arm:lessons]
+  discussion: [arm:discussion]
+  topic: [arm:topics]
+  note: [arm:notes]
+  hub: [arm:notes, generated]
+  paper: [papers]
+  bibtex: [papers]
+  code-card: [code]
+  recipe: [code, arm:notes]
+  request: [requests]
+  code-usage: [generated]
+  gaia-table: [generated]
+  gaia-section: [generated]
+
+# Allowed values for enumerated fields.
+enums:
+  kind: [pitfall, tip, recipe, open-question]
+  status: [current, disputed, superseded]
+  release: [DR2, EDR3, DR3, DR4, FPR]
+
+# File names: lessons and discussion files carry their date and author, so two people
+# never create the same file. Python regular expressions on the file stem.
+name_patterns:
+  lesson: '^\d{4}-\d{2}-\d{2} - (?P<author>[A-Za-z0-9-]+) - .+$'
+  discussion: '^.+ - \d{4}-\d{2}-\d{2} \d{4} - (?P<author>[A-Za-z0-9-]+)$'
+  request: '^\d{4}-\d{2}-\d{2} - (?P<author>[A-Za-z0-9-]+) - .+$'
+
+# Characters not allowed in note file names.
+forbidden_filename_chars: [":", "?", "*", "\"", "<", ">", "|", "^", "#", "[", "]"]
+
+# Seafile names a conflict copy "<name> (SFConflict <user> <date>).<ext>".
+conflict_marker: "SFConflict"
+
+# Text that often marks internal, non-public documents. A note containing one gets a
+# WARNING for a person to review (rule 1: no proprietary data). Generated notes are
+# skipped, and notes whose frontmatter says `markers_reviewed: true`.
+review_markers:
+  - "DPAC internal"
+  - "DPAC-internal"
+  - "re:GAIA-C[0-9U]+-(TN|SP|UG|MN|RP)-"     # DPAC document codes, e.g. GAIA-C4-TN-...
+  - "Livelink"
+  - "CONFIDENTIAL"
+  - "not for distribution"
+
+# Optional field `pinned: true` puts a note under "Pinned" on Home. Only the owner sets it.

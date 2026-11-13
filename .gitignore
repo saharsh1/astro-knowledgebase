@@ -1,0 +1,22 @@
+# Synced by the Seafile app from Keeper: never in git
+live/
+keeper/
+
+# Local to each machine: never in git, never synced
+outbox/
+sandbox/
+index/
+external/
+.index-staging/
+scripts/config.local
+
+# Obsidian: only the shared settings are in git; the workspace is per machine
+.obsidian/*
+!.obsidian/app.json
+!.obsidian/bookmarks.json
+
+.claude/settings.local.json
+.claude/state/
+__pycache__/
+*.pdf
+.DS_Store

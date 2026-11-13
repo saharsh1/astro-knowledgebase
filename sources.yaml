@@ -1,0 +1,44 @@
+# What the vault indexes besides its own notes.
+# Code repositories are cloned read-only by scripts/setup.sh at the pinned commit.
+# Raise a pin by pull request; lessons with `applies_to: repo:<name>@<old commit>`
+# are then flagged for review by the checker.
+
+repositories:
+  - name: orblet
+    url: https://github.com/saharsh1/orblet
+    commit: ac3eeb7590cd   # 2026-10-22
+    index: [src, docs, notebooks, README.md]
+  - name: SPARTA
+    url: https://github.com/SPARTA-dev/SPARTA
+    commit: e6ce5f4fa898   # 2026-10-20
+    index: [src, packages, docs, examples, README.md, KNOWN_TRAPS.md]   # code and docs only, not data
+  - name: sedkit
+    url: https://github.com/jiadonglee/spbin   # renamed from sedkit on GitHub
+    commit: dfda53401e9c   # 2026-10-01
+    index: [src, docs, examples, README.md]
+
+  - name: gaiamock
+    url: https://github.com/kareemelbadry/gaiamock
+    commit: 5c3c006b0906   # 2026-11-09
+    index: [src, docs, tools, README.md]   # restructured as a package by 2026-11; not data/
+  - name: GaiamockWrapper
+    url: https://github.com/BenPennell/GaiamockWrapper
+    commit: 68e2280c48b7   # 2026-10-21, MIT
+    index: [Wrapper, readme.md, "1)SimpleExamples.ipynb", "2)LightPopsynthExample.ipynb", "3)BHCompanionsExample.ipynb"]   # not data/
+
+gaia_docs:
+  - release: DR4-draft
+    doc_version: "draft 2026-06-26"
+    zip: https://anonftp.cosmos.esa.int/pub/GAIA_PUBLIC_DATA/Gaia_DR4/dr4-prerelease/gaia-dr4-prerelease-draft-data-model_2026-06-26.zip
+    public: "yes - offered for anonymous download on https://www.cosmos.esa.int/web/gaia/dr4 (#datamodel) and the DR4 pre-release page; checked 2026-11-11 and 2026-11-12. Licence: https://www.cosmos.esa.int/web/gaia-users/license"
+  - release: DR4-prerelease-epoch-astrometry
+    zip: https://anonftp.cosmos.esa.int/pub/GAIA_PUBLIC_DATA/Gaia_DR4/dr4-prerelease/gaia-dr4-prerelease-epoch-astrometry_2026-06-26.zip
+    public: "yes - 12 sources, https://www.cosmos.esa.int/web/gaia/dr4-prerelease; used by demos/02"
+  - release: DR3
+    doc_version: "1.3 (2023-07-10)"
+    html: https://gea.esac.esa.int/archive/documentation/GDR3/
+    pdf: https://gea.esac.esa.int/archive/documentation/GDR3/pdf/GaiaDR3_documentation_1.3.pdf   # 185 MB, kept only in Keeper
+    archive_columns: "https://gea.esac.esa.int/tap-server/tap  (tap_schema.columns, table_name LIKE 'gaiadr3.%')"
+    note: "Test case for the DR4 parser. Public."
+
+papers: []   # arXiv ids; filled by the paper importer

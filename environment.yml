@@ -1,0 +1,31 @@
+# Python environment for the astro knowledge base.
+#   conda env create -f environment.yml      (scripts/setup.sh does this)
+# Search: sentence-transformers + torch + lancedb + pymupdf + mcp
+# Notebooks and demos: numpy, scipy, matplotlib, astropy, astroquery, jupyter
+name: bskb
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - matplotlib
+  - pandas
+  - astropy
+  - astroquery>=0.4.10
+  - pyyaml
+  - requests
+  - tqdm
+  - jupyterlab
+  - nbconvert
+  - ipykernel
+  - emcee
+  - pymupdf>=1.24
+  - pytorch>=2.2              # from conda-forge, not pip: pip's torch bundles a second OpenMP runtime (crash on macOS)
+  - sentence-transformers>=3.0
+  - pip
+  - pip:
+      - lancedb>=0.13
+      - mcp>=1.2,<2
+      - "orblet[all] @ git+https://github.com/saharsh1/orblet.git@ac3eeb7590cd"   # pinned as in sources.yaml
+      - corner
