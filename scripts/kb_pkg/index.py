@@ -33,6 +33,7 @@ from .store import Store
 CODE_SUFFIXES = {".py", ".ipynb", ".jl"}
 DOCS_TYPES = {"gaia-table", "gaia-section"}          # note types indexed as source_type "docs"
 SKIP_TYPES = {"bibtex"}                              # note types not worth searching
+SKIP_STEMS = re.compile(r" - Bibliography$")         # reference lists of the documentation: names, no content
 WIKILINK = re.compile(r"(?<!\!)\[\[([^\]|#]+)")
 DOC_SUFFIXES = {".md", ".rst", ".txt"}
 
@@ -83,7 +84,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
                     cited[target].add(arm)
 
     for p, fm, arm in notes:
-        if fm.get("type") in SKIP_TYPES:
+        if fm.get("type") in SKIP_TYPES or SKIP_STEMS.search(p.stem):
             continue
         rel = p.relative_to(config.ROOT).as_posix()
         arms = {arm, *_arms_list(fm)} if arm else set(_arms_list(fm))

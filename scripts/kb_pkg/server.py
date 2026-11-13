@@ -53,16 +53,18 @@ def _format_hit(hit: dict) -> dict:
 
 @mcp.tool()
 def search_kb(query: str, k: int | None = None, source_type: str | None = None,
-              author: str | None = None, arm: str | None = None) -> list[dict]:
+              author: str | None = None, arm: str | None = None, per_source: int | None = None) -> list[dict]:
     """Search the astro knowledge base by meaning. With no filter: everything (all arms'
     notes, the curated papers' PDFs, the group's code, the Gaia documentation).
     arm='<arm>': 'gaia' (Gaia notes, papers and documentation), 'software' (code cards,
     code and its documentation), or a science arm ('binary-stars', 'milky-way', ...): that
     arm's notes and the papers linked to it. source_type='note'|'paper'|'code'|'docs' ('docs' = Gaia data-model and
     documentation notes). author='<surname>' for papers or '<repository>' for code.
-    Filters combine. Cite as 'source, where'. For exact column names, types, units or
+    Filters combine. A list holds at most 2 passages of one source (per_source=0: no limit;
+    get_neighbors: the passages around a hit). Cite as 'source, where'. For exact column names, types, units or
     flags use lookup_column instead."""
-    hits = _get_searcher().search(query, k=k, source_type=source_type, author=author, arm=arm)
+    hits = _get_searcher().search(query, k=k, source_type=source_type, author=author, arm=arm,
+                                  per_source=per_source)
     return [_format_hit(h) for h in hits]
 
 

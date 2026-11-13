@@ -25,6 +25,7 @@ _DEFAULTS = {
     "KB_MODEL_REVISION": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",   # pinned: indexes from other revisions do not mix
     "KB_RERANKER_MODEL": "",       # empty => disabled
     "KB_DEFAULT_K": "12",
+    "KB_MAX_PER_SOURCE": "2",      # passages of one source in a result list; 0 => no limit
     "KB_DEVICE": "cpu",            # cpu | cuda | mps | auto
 }
 
@@ -100,6 +101,10 @@ def reranker_model() -> str | None:
 
 def default_k() -> int:
     return int(_get("KB_DEFAULT_K") or _DEFAULTS["KB_DEFAULT_K"])
+
+
+def max_per_source() -> int:
+    return int(_get("KB_MAX_PER_SOURCE") or _DEFAULTS["KB_MAX_PER_SOURCE"])
 
 
 def device() -> str:

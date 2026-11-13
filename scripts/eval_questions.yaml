@@ -1,0 +1,143 @@
+# Test questions for the search index, each with the sources that count as a right answer
+# (`right`: any of these texts in the passage's source id). Run: python scripts/eval_search.py
+# Add questions from real work: a question you asked, and the source where the answer was.
+# `kind` only groups the report: paper | docs | code | any (several kinds of source are right).
+- question: How does the parallax zero point depend on magnitude, colour and position?
+  kind: paper
+  right:
+  - Parallax bias
+- question: How were the astrometric binary orbital solutions validated?
+  kind: paper
+  right:
+  - Holl et al (2023) - Gaia Data Release 3. Astrometric orbit
+  - Halbwachs
+  - Arenou
+  - Babusiaux
+- question: Radial velocity offsets for hot stars
+  kind: paper
+  right:
+  - Blomme
+- question: Selection of quasars for the celestial reference frame
+  kind: paper
+  right:
+  - Klioner et al (2022)
+- question: Acceleration of the solar system barycentre measured from quasar proper motions
+  kind: paper
+  right:
+  - Klioner et al (2021)
+- question: How were eclipsing binary candidates found and modelled?
+  kind: paper
+  right:
+  - Mowlavi
+- question: 'Rotational line broadening vbroad from the RVS: accuracy and limits'
+  kind: paper
+  right:
+  - Frémat
+- question: Ellipsoidal variables that may host a black hole or neutron star
+  kind: paper
+  right:
+  - Gomel
+- question: How are single-lined spectroscopic binary orbits computed?
+  kind: paper
+  right:
+  - Gosset
+- question: Spurious periods caused by the scan angle
+  kind: paper
+  right:
+  - scan-angle
+- question: Photometric calibration of the G, BP and RP bands
+  kind: paper
+  right:
+  - Riello
+- question: Stars within 100 pc of the Sun
+  kind: paper
+  right:
+  - Smart
+- question: Masses of the components of astrometric binaries; mass function
+  kind: paper
+  right:
+  - Arenou
+- question: 'Validation of the radial velocities: precision as a function of magnitude'
+  kind: paper
+  right:
+  - Katz
+- question: Modelling of the point spread function and line spread function
+  kind: paper
+  right:
+  - Rowell
+- question: How does the astrometric solution treat sources with six-parameter solutions and pseudo-colour?
+  kind: paper
+  right:
+  - The astrometric solution
+- question: What is RUWE and when does it indicate a bad astrometric fit?
+  kind: any
+  right:
+  - The astrometric solution
+  - DR3 doc
+  - gaia_source
+  - Catalogue validation
+- question: Which orbital models does the non-single-star astrometric pipeline try, and in what order?
+  kind: docs
+  right:
+  - chap_cu4nss
+  - Halbwachs
+- question: What do the bits of bit_index mean in nss_two_body_orbit?
+  kind: docs
+  right:
+  - nss_two_body_orbit
+- question: Thiele-Innes elements and their conversion to Campbell elements
+  kind: any
+  right:
+  - chap_cu4nss
+  - Halbwachs
+  - nss_two_body_orbit
+- question: How does the scanning law set the number of observations of a source?
+  kind: any
+  right:
+  - DR3 doc
+  - The Gaia mission
+  - Summary of the content
+- question: Which table holds the epoch astrometry in DR4?
+  kind: docs
+  right:
+  - DR4-draft
+- question: How is the RVS spectrum reduced and the radial velocity derived in the pipeline?
+  kind: any
+  right:
+  - chap_cu6spe
+  - Katz
+  - Sartoretti
+- question: Crowding and blending effects on BP/RP photometry; the flux excess factor
+  kind: any
+  right:
+  - Riello
+  - chap_cu5pho
+  - DR3 doc
+- question: simulate Gaia epoch astrometry of a binary star
+  kind: code
+  right:
+  - code:gaiamock
+  - code:GaiamockWrapper
+  - Software - gaiamock
+- question: fit a Keplerian orbit to radial velocities
+  kind: code
+  right:
+  - code:orblet
+  - code:SPARTA
+- question: fit the spectral energy distribution of a binary with two components
+  kind: code
+  right:
+  - code:sedkit
+- question: cross-correlate an observed spectrum with a template to measure radial velocity
+  kind: code
+  right:
+  - code:SPARTA
+- question: predict the astrometric signal-to-noise or detection probability of an orbit
+  kind: code
+  right:
+  - code:gaiamock
+  - code:GaiamockWrapper
+- question: convert Thiele-Innes constants to semi-major axis and inclination in code
+  kind: code
+  right:
+  - 'code:'

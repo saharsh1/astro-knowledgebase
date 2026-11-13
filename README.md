@@ -50,6 +50,10 @@ access to them, the skeleton still runs its checks and tests.
 - Built: `scripts/setup.sh` (environment, `config.local`, GitHub name, pre-commit check, the
   pinned search model, then the `/sync` steps and the doctor) and `scripts/doctor.py` (16 checks
   of setup, content and a working search server; changes nothing; `--fast` skips the model).
+- Measured: `scripts/eval_search.py` runs the questions of `scripts/eval_questions.yaml` (30, each
+  with its right sources). 2026-11-13: right source first for 20, in the top 5 for 28, in the top 10
+  for all 30; 7.6 different sources per top 10. A result list holds at most 2 passages of one
+  source (`per_source`); the documentation's bibliography is not indexed.
 - To come: the snapshot script.
 
 The design is in `docs/design/`.
