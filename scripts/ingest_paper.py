@@ -35,7 +35,7 @@ from kb_common import (CONV, KEEPER, OUTBOX, ROOT, LIVE, find_paper, frontmatter
 
 API = "https://api.scixplorer.org/v1"
 GATEWAY = "https://scixplorer.org/link_gateway"
-UA = {"User-Agent": "Mozilla/5.0 (knowledge-base paper ingest)"}
+UA = {"User-Agent": "astro-kb-builder/1 (paper ingest; one request at a time)"}   # honest: never a browser's
 FL = "bibcode,title,author,year,abstract,doi,esources,identifier"
 NOTE_ILLEGAL = ':/\\*?"<>|^#[]'
 PDF_ILLEGAL = '/\\*?"<>|^#[]'
@@ -65,9 +65,10 @@ def plain_title(title: str) -> str:
     "<i>Gaia</i>Data Release 3", which would otherwise read "GaiaData"."""
     title = re.sub(r"<sup>(.*?)</sup>", r"^\1", title, flags=re.I)
     title = re.sub(r"<sub>", "", title, flags=re.I)
-    title = re.sub(r"</sub>", " ", title, flags=re.I)
-    title = re.sub(r"</?(?:i|b|em|scp)>", " ", title, flags=re.I)
-    title = re.sub(r"\s+", " ", title).strip()
+    title = re.sub(r"</?(?:sub|i|b|em|scp)>", "\0", title, flags=re.I)
+    title = re.sub(r"\0\s*\n\s*|\s*\n\s*\0", "\0", title)        # Crossref breaks lines after tags
+    title = re.sub(r"(?<=\w)\0+(?=\w)", " ", title)          # a tag between two words is a space
+    title = re.sub(r"\s+", " ", title.replace("\0", "")).strip()
     return re.sub(r"\s+([,.;:)])", r"\1", re.sub(r"([(])\s+", r"\1", title))
 
 
@@ -126,17 +127,21 @@ def fetch_open(kind: str, value: str, arxiv_hint: str | None = None) -> dict:
     if kind == "bibcode" and not doi:
         raise LookupError("a bibcode needs SCIX_TOKEN; give the DOI or arXiv id instead")
     title, authors, year, bib = (ax or {}).get("title"), (ax or {}).get("authors", []), (ax or {}).get("year"), None
+    oa_pdf = None
     if doi:
         r = requests.get(f"https://api.crossref.org/works/{doi}", headers=OPEN_UA, timeout=60)
         r.raise_for_status()
         w = r.json()["message"]
-        main_t = " ".join((w.get("title") or [title or ""])[0].split())
-        sub = " ".join((w.get("subtitle") or [""])[0].split())
-        title = plain_title(f"{main_t}: {sub}" if sub and sub.lower() not in main_t.lower() else main_t)
+        main_t = plain_title((w.get("title") or [title or ""])[0])
+        sub = plain_title((w.get("subtitle") or [""])[0])
+        title = f"{main_t}: {sub}" if sub and sub.lower() not in main_t.lower() else main_t
         authors = [f"{a['family']}, {a.get('given', '')}".strip(", ") if a.get("family") else a.get("name", "")
                    for a in w.get("author", [])] or authors
         parts = (w.get("published-print") or w.get("published-online") or w.get("issued") or {}).get("date-parts")
         year = int(parts[0][0]) if parts and parts[0] and parts[0][0] else year
+        if any("creativecommons.org" in (x.get("URL") or "") for x in w.get("license", [])):
+            oa_pdf = next((x["URL"] for x in w.get("link", []) if x.get("URL", "").rstrip("/").endswith("/pdf")
+                           or x.get("content-type") == "application/pdf"), None)
         b = requests.get(f"https://doi.org/{doi}", headers={**OPEN_UA, "Accept": "application/x-bibtex"}, timeout=60)
         if b.ok and b.text.lstrip().startswith("@"):
             import html as _html
@@ -147,7 +152,7 @@ def fetch_open(kind: str, value: str, arxiv_hint: str | None = None) -> dict:
     if not bib and arxiv:
         b = requests.get(f"https://arxiv.org/bibtex/{arxiv}", headers=OPEN_UA, timeout=60)
         bib = b.text.strip() if b.ok and b.text.lstrip().startswith("@") else None
-    return {"bibcode": None, "title": title, "authors": authors, "year": year,
+    return {"bibcode": None, "title": title, "authors": authors, "year": year, "oa_pdf": oa_pdf,
             "abstract": (ax or {}).get("abstract", ""), "doi": doi, "esources": [], "arxiv": arxiv,
             "bibtex": bib or f"% no BibTeX found for {kind}:{value}"}
 
@@ -178,6 +183,8 @@ def get_pdf(meta: dict, path: Path) -> str | None:
         urls.append(("publisher open access", f"{GATEWAY}/{meta['bibcode']}/PUB_PDF"))
     if meta["arxiv"]:
         urls.append(("arXiv", f"https://arxiv.org/pdf/{meta['arxiv']}"))
+    if meta.get("oa_pdf"):                              # Crossref: a Creative Commons licence and a PDF link
+        urls.append(("publisher open access (Creative Commons licence in Crossref)", meta["oa_pdf"]))
     for source, url in urls:
         try:
             r = requests.get(url, headers=UA, timeout=120, allow_redirects=True)

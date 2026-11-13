@@ -46,6 +46,14 @@ gaia:
     prerelease_data:   # not built yet
       - zip: https://anonftp.cosmos.esa.int/pub/GAIA_PUBLIC_DATA/Gaia_DR4/dr4-prerelease/gaia-dr4-prerelease-epoch-astrometry_2026-06-26.zip
         note: "epoch astrometry of 12 sources, https://www.cosmos.esa.int/web/gaia/dr4-prerelease"
+  - label: EDR3
+    release: EDR3
+    status: formal
+    doc_version: "EDR3 (2020-12-03)"
+    page: https://www.cosmos.esa.int/web/gaia/early-data-release-3
+    public: "yes - released 2020-12-03; DR3 forms a full release together with EDR3 (its astrometry and photometry)"
+    papers:            # scripts/build/gaia_papers.py EDR3: every paper on ESA's page, arm gaia
+      page: https://www.cosmos.esa.int/web/gaia/edr3-papers
   - label: DR3
     release: DR3
     status: formal

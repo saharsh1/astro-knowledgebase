@@ -53,6 +53,12 @@ def main() -> int:
     expect("italic tags do not glue words: '<i>Gaia</i>Data' -> 'Gaia Data'",
            ingest.plain_title("<i>Gaia</i>Data Release 3: The first<i>Gaia</i>catalogue")
            == "Gaia Data Release 3: The first Gaia catalogue")
+    expect("a tag next to punctuation adds no space: '(Gaia-CRF3)', 'Gaia’s'",
+           ingest.plain_title("The celestial reference frame (<i>Gaia</i>-CRF3) and <i>Gaia</i>’s PSF")
+           == "The celestial reference frame (Gaia-CRF3) and Gaia’s PSF")
+    expect("a line break after a tag (Crossref) adds no space before '-'",
+           ingest.plain_title("(<i>Gaia</i>\n                    -CRF3)") == "(Gaia-CRF3)"
+           and ingest.plain_title("<i>Gaia</i>\n                    Early Data Release 3") == "Gaia Early Data Release 3")
     expect("a subscript is followed by a space",
            ingest.plain_title("<i>G</i><sub>RVS</sub>photometry") == "G RVS photometry")
     expect("file names: ': ' -> '. ', '/' -> '-'",

@@ -24,7 +24,7 @@ access to them, the skeleton still runs its checks and tests.
 - Built: the DR3 documentation 1.3, `scripts/build/gaia_docs.py DR3`: a snapshot of the
   646 web pages; 94 data-model tables, 2,093 columns, checked against the archive's own
   column list; 552 section notes with links between pages and to columns.
-- Built: the DR3 papers on ESA's DR3 papers page, `scripts/build/gaia_papers.py DR3`
+- Built: the papers on ESA's DR3 and EDR3 papers pages (57), `scripts/build/gaia_papers.py DR3|EDR3`
   (arm `gaia`; metadata from Crossref and arXiv, no token needed; PDFs from arXiv), and
   their cleaned text, `scripts/build/paper_text.py` (ligatures, split words, reference lists).
 - Next: `scripts/build/`: the code documentation (the `software` arm); then a fresh index;
