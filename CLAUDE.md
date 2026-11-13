@@ -90,6 +90,9 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
   source (`"docs"`: the Gaia documentation only). One index, one embedding model; every passage is labelled with its arm.
 - A question about a column and its uses: `lookup_column` for the table entry, then
   `search_kb` with no filter for how notes, papers and code use it.
+- Your index is `index/`: `cd scripts && HF_HUB_OFFLINE=1 python -m kb_pkg.index` adds what is new.
+  `python scripts/publish_index.py --pull` copies a newer published index from `keeper/index/`;
+  only the index keeper publishes (`/publish-index`).
 
 ## Layout
 

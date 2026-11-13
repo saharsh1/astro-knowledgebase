@@ -35,10 +35,13 @@ access to them, the skeleton still runs its checks and tests.
   notes 298. BibTeX notes are not indexed.
 - The paper text leaves out reference lists and author and affiliation lists (Gaia
   Collaboration papers list hundreds of authors, which ranked high in search).
-- Next: `/publish-index`; the DR4 papers and documentation at the release. Nothing is imported from the
+- Built: `/publish-index` (`scripts/publish_index.py`): the index keeper publishes the index
+  to `keeper/index/` with a version, an archive of 3 earlier versions and a history line in
+  Keeper (not in git: it names private notes); members `--pull` it. `scripts/regenerate.sh`
+  rebuilds the software arm's notes after the code pins move.
+- Next: the DR4 papers and documentation at the release. Nothing is imported from the
   old binary stars knowledge base.
-- To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
-  script.
+- To come: `/sync`, `/share`; `setup.sh` and `doctor.py`; the snapshot script.
 
 The design is in `docs/design/`.
 
@@ -54,6 +57,7 @@ python scripts/test_consolidate_resolve.py
 python scripts/test_paper_text.py
 python scripts/test_build_software.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
+python scripts/test_publish_index.py   # needs lancedb
 python scripts/test_build_datamodel.py  # needs pymupdf; checks the DR4 draft if keeper/ has it
 python scripts/test_build_docs.py --real # needs beautifulsoup4; checks the DR3 build if keeper/ has it
 ```

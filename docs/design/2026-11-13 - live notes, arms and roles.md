@@ -74,6 +74,8 @@ The pull request was the point where a check ran and a person looked. With live 
 
 - **On each machine:** each member's machine indexes the live notes as they change. `python -m kb_pkg.index` already adds only what is new.
 - **The published index** is still built by the index keeper and copied to `keeper/index/`. It now saves time, and members no longer depend on it.
+- **Who publishes:** the owner, or a member listed under `index_keepers:` in `keeper/roles.yaml`.
+- **The history** (`keeper/index/history.jsonl`) stays in Keeper, not in git: it names the notes that changed, and the notes are private (§13).
 - **What the index records:** `index_meta.json` records the snapshot tag and a hash of the note list, instead of `kb_commit`.
 
 ## 6. `/consolidate` and `/resolve`

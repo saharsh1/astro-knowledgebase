@@ -8,6 +8,7 @@ sandbox/
 index/
 external/
 .index-staging/
+index.copying/
 scripts/config.local
 
 # Obsidian: only the app settings are in git. Bookmarks name notes, and the notes are
