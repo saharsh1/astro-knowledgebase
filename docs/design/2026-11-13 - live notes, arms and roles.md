@@ -212,31 +212,25 @@ Added 2026-11-13.
 - **Declining.** To decline, the curator writes a discussion file with `about:` the request and the reason, for example "not public".
 - **The existing script is reused.** `import_paper.py` becomes the curators' tool, with the duplicate check and `requested_by`.
 
-## 11. Fresh start instead of migrating in place
+## 11. Fresh start: built from sources, nothing imported
 
-Added 2026-11-13. This replaces §8 steps 3–4 and `scripts/migrations/2_live_notes.py`.
+Added 2026-11-13; revised the same day. This replaces §8 steps 3–4 and `scripts/migrations/2_live_notes.py`.
 
-- **New names.** A new git repository, with a new name (the arms go beyond binary stars), and two new Keeper libraries (data, notes). The current repository and Keeper library keep running unchanged until the switch.
-- **The skeleton is built new,** starting from the current scripts, skills and templates and adapted to §1–10. The new repository starts with no history.
-- **The old repository and the old Keeper library will be deleted** (decided 2026-11-13), and the history of the new repository will be started over before it goes public. So the import must read everything it needs *before* the deletion, and the import is the time to reorganise freely: there is no history to keep compatible.
-- **Migration is a one-time import.** A script reads the old repository and the old Keeper library and writes the new layout:
-  - each note and lesson goes to `gaia` or `binary-stars` (§12), following a list the owner approves first; lessons are renamed to include the author;
-  - paper notes get `arms: [gaia]` (Gaia Collaboration and DPAC papers) or `arms: [binary-stars]`;
-  - code cards are split from their generated usage blocks;
-  - the generated notes are regenerated;
-  - every arm is embedded fresh with one model.
-- **The switch.**
-  1. Freeze the old repository: no more merges.
-  2. Run the import.
-  3. Make the first snapshot.
-  4. Members clone the new skeleton and sync the new libraries.
-  5. Check the import (checker, a search for a few known notes), then delete the old repository and the old Keeper library.
+- **New names.** A new git repository, `astro-knowledgebase` (public, §13), and two new Keeper libraries, `astro-kb-data` and `astro-kb-notes` (closed).
+- **Nothing is imported** from the binary stars knowledge base. Its content was put together by hand: paper lists chosen one by one, a draft data model, Gaia and binary-star material mixed, generated text inside hand-written notes. The old repository and Keeper library will be deleted.
+- **Content is built from declared sources.** Every item in Keeper comes from a source listed in `sources.yaml` and is built by a script in `scripts/build/`. So anyone can see where it came from and rebuild it. Order:
+  1. The Gaia documentation and data model: DR3 now; DR4 from its release (planned for 2 December 2026).
+  2. The Gaia papers: the lists on ESA's DR3 papers page (documentation and performance verification papers), and the DR4 papers page at the release. PDF text is cleaned once (ligatures, words split at line ends, reference lists marked) and stored in `keeper/parsed/papers/`.
+  3. The code: a generated summary note per pinned repository; the code itself is searched from the checkouts.
+  4. A fresh index.
+- **Members' notes start empty.** Lessons and digests are written again as needed, against the formal sources.
 
-## 12. The Gaia arm: a foundation for every arm
+## 12. The Gaia arm, and the layers of arms
 
 Added 2026-11-13. The old knowledge base mixed two things: what Gaia says (documentation, data model, validation, the Gaia Collaboration papers) and binary-star science. Every arm needs the first; only one arm needs the second.
 
-- **A foundation arm `gaia`** (`foundation: true` in `conventions.yaml`). It holds notes, lessons, topics and discussion like any arm. Its label also goes on the generated documentation (`docs_arm: gaia`) and on the papers that its notes cite or that a curator ingests for it.
+- **Arms have layers** (`layer:` in `conventions.yaml`): 0 `gaia`, 1 `software`, 2 the science arms. Each holds notes, lessons, topics and discussion. Generated notes in `keeper/generated/<arm>/` carry that arm's label; the code itself carries `code_arm: software`.
+- **`software` is an arm of its own** (revised 2026-11-13). Several arms use the code; it changes at its own pace (the pins in `sources.yaml`); its documentation is generated from the repositories. Code cards are notes in `live/software/notes/`; the shared `live/code/` folder is gone.
 
   | `gaia` | a science arm, e.g. `binary-stars` |
   |---|---|
@@ -245,9 +239,9 @@ Added 2026-11-13. The old knowledge base mixed two things: what Gaia says (docum
   | lessons on columns, flags, units, `corr_vec`, selection criteria | lessons on a paper's error, a method, a population |
   | validation tables: Gaia values against independent catalogues | notes that connect the two, e.g. a mass from a DR3 orbit |
 
-- **Links run one way, from the science arms into `gaia`.** The checker refuses a `gaia` note with a link (in the text, or in `about:`, `consolidates:`, `supersedes:`) to a note of a non-foundation arm. Links to shared papers and code cards are allowed. So the Gaia arm stays complete without any science arm, and a Milky Way member can use it without binary-star notes in the way.
+- **Links run down the layers only: science → software → gaia.** The checker refuses a link (in the text, or in `about:`, `consolidates:`, `supersedes:`) from a note to a note of a higher layer. Links to shared papers are always allowed. So `gaia` is complete without the other arms, and `software` without the science arms.
 - **The reverse view is generated, not written.** `lookup_column` lists the notes of every arm that use a column: by `applies_to:` or by a link to the column's data-model note. Obsidian's backlinks show the same for wikilinks.
-- **Tags.** The Gaia tags (`NSS`, `DataModel`, `Validation`, …) may be used in every arm, because science notes are about Gaia products too. Tags describe a note; the arm decides where it lives and who searches it.
+- **Tags.** A note may use the tags of every lower layer: Gaia tags (`NSS`, `DataModel`, …) everywhere, software tags in software and the science arms. Tags describe a note; the arm decides where it lives and who searches it.
 - **Search.** `arm="gaia"`: everything about Gaia (notes, papers, documentation). `source_type="docs"`: the documentation only.
 
 ## 13. A public skeleton, closed Keeper libraries
@@ -265,6 +259,45 @@ Added 2026-11-13.
 - **Squash merges only.** A file added and removed inside a pull request then never reaches the history of `main`.
 - **Licences.** MIT for the code (`LICENSE`), CC BY 4.0 for the text (`LICENSE-docs.md`). Neither covers the content in Keeper.
 - **Code pins.** `sources.yaml` names the code repositories and commits that are indexed. They are all public today. A private repository must not be pinned there.
+
+## 14. The folder tree
+
+Agreed 2026-11-13.
+
+```
+astro-knowledgebase/                 git, public; also the Obsidian vault
+├── CLAUDE.md, README.md, LICENSE, LICENSE-docs.md
+├── conventions.yaml                 arms and their layers, note types, tags, file-name patterns
+├── sources.yaml                     every source: Gaia releases, ESA papers pages, code pins
+├── environment.yml, .mcp.json
+├── templates/
+├── scripts/
+│   ├── check_vault.py, check_public.py, publish_notes.py, request_paper.py, ingest_paper.py,
+│   │   consolidate.py, resolve_conflicts.py, tests
+│   ├── build/                       gaia_docs, gaia_tables, gaia_papers, software_docs, usage, home
+│   └── kb_pkg/                      search index and MCP server
+├── demos/, docs/design/, .claude/, .github/
+│
+├── live/                            Keeper "astro-kb-notes": members read and write
+│   ├── gaia/                        layer 0: notes/ lessons/ topics/ discussion/
+│   ├── software/                    layer 1: the same; code cards in notes/
+│   ├── binary-stars/, milky-way/, hot-stars/    layer 2: the same
+│   ├── papers/ (bibtex/)            one note per paper, shared; arms: in the frontmatter
+│   └── requests/
+│
+├── keeper/                          Keeper "astro-kb-data": members read only
+│   ├── roles.yaml
+│   ├── pdfs/, data/gaia/<release>/, locks/
+│   ├── parsed/gaia/<release>/       columns.jsonl, tables.jsonl, sections.jsonl, parse_report.json
+│   ├── parsed/papers/, parsed/usage/
+│   ├── generated/                   Home, indexes, requests;
+│   │   ├── gaia/<release>/datamodel/, gaia/<release>/documentation/
+│   │   ├── software/<repo>.md
+│   │   └── related/<arm>.md
+│   └── index/current/, index/archive/<version>/
+│
+└── outbox/, sandbox/, index/, external/      local only
+```
 
 ## Open questions
 

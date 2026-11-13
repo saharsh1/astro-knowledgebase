@@ -12,11 +12,13 @@ INDEX_DIR = ROOT / "index"                 # git-ignored; each machine builds it
 EXTERNAL_DIR = ROOT / "external"           # code checkouts (scripts/fetch_code.py)
 KEEPER_DIR = ROOT / "keeper"               # Keeper library "astro-kb-data" (read-only for members)
 LIVE_DIR = ROOT / "live"                   # Keeper library "astro-kb-notes"
-PARSED_COLUMNS = {                         # structured data models for the exact lookup
-    "DR4 draft": KEEPER_DIR / "parsed" / "DR4-draft-2026-06-26" / "columns.jsonl",
-}
-DR3_COLUMNS = KEEPER_DIR / "data" / "gaia-docs" / "DR3" / "gaiadr3_tap_columns_2026-11-11.csv"
+GAIA_PARSED = KEEPER_DIR / "parsed" / "gaia"  # <release>/columns.jsonl: the data model, for the exact lookup
 USAGE_DIR = KEEPER_DIR / "parsed" / "usage"
+
+
+def parsed_columns() -> dict[str, Path]:
+    """release -> columns.jsonl, for every release parsed into keeper/parsed/gaia/<release>/."""
+    return {f.parent.name: f for f in sorted(GAIA_PARSED.glob("*/columns.jsonl"))}
 
 _DEFAULTS = {
     "KB_EMBEDDING_MODEL": "BAAI/bge-large-en-v1.5",
@@ -49,12 +51,25 @@ def note_folders(arm: str | None = None) -> list[Path]:
 
 
 def arm_of(path: Path) -> str | None:
-    """The arm a note belongs to (its folder), or None for shared and generated notes."""
+    """The arm a note belongs to: live/<arm>/... or keeper/<generated>/<arm>/...;
+    None for shared notes (papers, requests) and other generated notes (Home)."""
+    conv = conventions()
+    p = path.resolve()
     try:
-        first = path.resolve().relative_to(LIVE_DIR.resolve()).parts[0]
-    except (ValueError, IndexError):
-        return None
-    return first if first in conventions()["arms"] else None
+        parts = p.relative_to(LIVE_DIR.resolve()).parts
+        first = parts[0] if len(parts) > 1 else None
+    except ValueError:
+        try:
+            parts = p.relative_to(KEEPER_DIR.resolve()).parts
+        except ValueError:
+            return None
+        first = parts[1] if len(parts) > 2 and parts[0] in conv["generated_folders"] else None
+    return first if first in conv["arms"] else None
+
+
+def code_arm() -> str | None:
+    """The arm the code itself (external/ checkouts, demos/) is labelled with."""
+    return conventions().get("code_arm")
 
 
 def repositories() -> list[dict]:

@@ -13,7 +13,7 @@ members only).
 |---|---|---|
 | **This git repository** (the skeleton, public) | Rules, conventions, templates, scripts, skills, code pins | The owner; members propose changes by pull request |
 | **Keeper library "astro-kb-data"**, synced to `keeper/` | PDFs, data, parsed documentation, search indexes, `generated/` notes, `locks/`, `roles.yaml` (the curators) | Curators and the owner; members read only |
-| **Keeper library "astro-kb-notes"**, synced to `live/` | The notes: one folder per topical **arm**, plus the shared `papers/`, `code/` and `requests/` | Members |
+| **Keeper library "astro-kb-notes"**, synced to `live/` | The notes: one folder per **arm**, plus the shared `papers/` and `requests/` | Members |
 
 Notes are live: Keeper syncs them to everyone within minutes. The owner commits
 snapshots of them to a separate, **private** repository from time to time
@@ -56,17 +56,24 @@ arm's tags, is in `conventions.yaml`. Each arm has `notes/`, `lessons/`, `topics
 Papers and code cards are shared by all arms. A paper's arms are the one its importer set
 plus every arm whose notes cite it (generated).
 
-**`gaia` is the foundation arm.** It holds what the Gaia data and documentation say:
-column, flag and unit lessons, selection criteria, validation results, and (by label) the
-Gaia Collaboration papers and the generated documentation. The science arms
-(`binary-stars`, `milky-way`, `hot-stars`) hold the science and how it uses Gaia.
+**The arms are in three layers:**
 
-- **Links run one way: from a science arm into `gaia`.** A `gaia` note never links to a
-  note of a science arm; the checker refuses it. A note that connects the two (e.g. a
-  black-hole mass from a DR3 orbit) lives in the science arm.
+| Layer | Arm | Holds |
+|---|---|---|
+| 0 | `gaia` | What the Gaia data and documentation say: column, flag and unit lessons, selection criteria, validation results; by label, the Gaia Collaboration papers and the generated documentation (`keeper/generated/gaia/<release>/`) |
+| 1 | `software` | The code the group uses: code cards (`software/notes/<repo>.md`), recipes, pitfalls tied to `repo@commit`; by label, the code itself and `keeper/generated/software/` |
+| 2 | `binary-stars`, `milky-way`, `hot-stars`, … | The science, and how it uses Gaia and the code |
+
+- **Links run down the layers only:** science → software → gaia. A note never links to a
+  note of a higher layer; the checker refuses it. A note that connects two layers (e.g. a
+  black-hole mass from a DR3 orbit) lives in the higher one.
 - **The reverse view is generated.** `lookup_column` lists the notes of every arm that use
   a column (`applies_to:` or a link to the column), next to the papers and code.
-- **Gaia tags** (`NSS`, `DataModel`, …) may be used in every arm.
+- **Tags:** a note may use the tags of its own arm, of the arms in its `arms:`, and of
+  every lower layer (so Gaia tags such as `NSS` are allowed everywhere).
+- **Content comes from sources.** The Gaia documentation, data model and verification
+  papers, and the code documentation, are built by `scripts/build/` from the sources listed
+  in `sources.yaml`. Nothing is added to Keeper by hand.
 
 File names are unique across all arms, so wikilinks `[[Title]]` work across arms.
 
@@ -75,8 +82,8 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
 - `lookup_column(table, column)`, `find_columns(text, table)`: exact Gaia column facts.
 - `search_kb(query, source_type, author, arm)`: passages by meaning. Cite source and page/line.
   With no filter it searches everything (all arms, papers, code, documentation).
-  `arm="<arm>"` keeps one topic (`arm="gaia"`: everything about Gaia: its notes, papers
-  and documentation); `source_type="note" | "paper" | "code" | "docs"` keeps one kind of
+  `arm="<arm>"` keeps one arm (`arm="gaia"`: Gaia notes, papers and documentation;
+  `arm="software"`: code cards, code and its documentation); `source_type="note" | "paper" | "code" | "docs"` keeps one kind of
   source (`"docs"`: the Gaia documentation only). One index, one embedding model; every passage is labelled with its arm.
 - A question about a column and its uses: `lookup_column` for the table entry, then
   `search_kb` with no filter for how notes, papers and code use it.
@@ -86,8 +93,8 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
 | Folder | Holds | In git |
 |---|---|---|
 | `live/<arm>/` | an arm's notes, lessons, topics, discussion | no (Keeper notes) |
-| `live/papers/`, `live/code/`, `live/requests/` | paper notes, code cards, paper requests | no (Keeper notes) |
-| `keeper/` | `pdfs/`, `data/`, `parsed/`, `index/`, `generated/`, `locks/` | no (Keeper data) |
+| `live/papers/`, `live/requests/` | paper notes, paper requests | no (Keeper notes) |
+| `keeper/` | `pdfs/`, `data/`, `parsed/`, `index/`, `generated/<arm>/`, `locks/`, `roles.yaml` | no (Keeper data) |
 | `outbox/` | your drafts, before `/publish` | no (local) |
 | `sandbox/` | your calculations | no (local) |
 | `index/`, `external/` | your search index, code checkouts | no (local) |

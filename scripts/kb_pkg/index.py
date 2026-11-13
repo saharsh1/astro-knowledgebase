@@ -9,9 +9,9 @@ Indexed sources:
           function/class, notebooks by cells, README/docs .md by heading
           (source_type "code"; author = repository name)
 
-Labels: every passage carries `arms`, the arms it belongs to ('|a|b|', or '' for code).
-A note: its folder's arm plus its `arms:`. The generated Gaia documentation: the
-`docs_arm` of conventions.yaml (gaia). A paper (note and PDF): its
+Labels: every passage carries `arms`, the arms it belongs to ('|a|b|').
+A note: its folder's arm (live/<arm>/ or keeper/generated/<arm>/) plus its `arms:`.
+Code (external/, demos/): the `code_arm` of conventions.yaml (software). A paper (note and PDF): its
 `arms:` plus every arm whose notes link to it. When only the labels of a source change
 (e.g. a new note cites a paper), its passages are relabelled without embedding them again.
 
@@ -66,7 +66,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
     extra['arms'] is the label string and extra['stype'] the source type of a note."""
     found: dict[str, tuple[str, Path, dict]] = {}
     known_arms = set(config.arms())
-    docs_arm = config.conventions().get("docs_arm")
+    code_label = labels({config.code_arm()} & known_arms)
     notes: list[tuple[Path, dict, str | None]] = []
     for folder in config.note_folders():
         for p in sorted(folder.rglob("*.md")):
@@ -87,8 +87,6 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
         if fm.get("type") == "paper":
             arms |= cited.get(p.stem, set())
         stype = "docs" if fm.get("type") in DOCS_TYPES else "note"
-        if stype == "docs" and docs_arm:
-            arms.add(docs_arm)
         arms &= known_arms
         found[rel] = ("note", p, {"arms": labels(arms), "stype": stype})
         if fm.get("type") == "paper":
@@ -98,7 +96,7 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
     demos = config.ROOT / "demos"                     # the knowledge base's own notebooks
     for p in sorted(demos.glob("*.ipynb")) if demos.exists() else []:
         rel = p.relative_to(demos).as_posix()
-        found[f"code:demos/{rel}"] = ("code", p, {"repo": "demos", "rel": rel})
+        found[f"code:demos/{rel}"] = ("code", p, {"repo": "demos", "rel": rel, "arms": code_label, "stype": "code"})
     for repo in config.repositories():
         base = config.EXTERNAL_DIR / repo["name"]
         if not base.exists():
@@ -108,9 +106,11 @@ def discover() -> dict[str, tuple[str, Path, dict]]:
                 continue
             rel = p.relative_to(base).as_posix()
             if p.suffix in CODE_SUFFIXES:
-                found[f"code:{repo['name']}/{rel}"] = ("code", p, {"repo": repo["name"], "rel": rel})
+                found[f"code:{repo['name']}/{rel}"] = ("code", p, {"repo": repo["name"], "rel": rel,
+                                                                    "arms": code_label, "stype": "code"})
             elif p.suffix in DOC_SUFFIXES and p.stat().st_size < 2_000_000:
-                found[f"code:{repo['name']}/{rel}"] = ("codedoc", p, {"repo": repo["name"], "rel": rel})
+                found[f"code:{repo['name']}/{rel}"] = ("codedoc", p, {"repo": repo["name"], "rel": rel,
+                                                                       "arms": code_label, "stype": "code"})
     return found
 
 

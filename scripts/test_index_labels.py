@@ -82,7 +82,9 @@ def main() -> int:
         (root / "scripts").mkdir(parents=True)
         shutil.copytree(REPO / "scripts" / "kb_pkg", root / "scripts" / "kb_pkg")
         shutil.copy(REPO / "conventions.yaml", root)
-        (root / "sources.yaml").write_text("repositories: []\n")
+        (root / "sources.yaml").write_text("repositories:\n  - {name: orblet, url: x, commit: abc, index: [.]}\n")
+        (root / "external/orblet").mkdir(parents=True)
+        (root / "external/orblet/fit.py").write_text("def fit(period):\n    \"\"\"Fit an orbit.\"\"\"\n    return period\n")
         live, keeper = root / "live", root / "keeper"
 
         write(live / "binary-stars/notes/BS note.md", "title: BS note\ntype: note\nauthor: a\ncreated: x\ntags: []",
@@ -99,30 +101,33 @@ def main() -> int:
         write(live / "gaia/lessons/2026-11-13 - c - Period.md",
               "title: Period\ntype: lesson\nkind: tip\nauthor: c\ncreated: x\nlast_checked: x\nstatus: current\n"
               "applies_to: ['dr3:nss_two_body_orbit.period']\ntags: [NSS]", "The period is in days.")
-        write(live / "code/orblet.md", "title: orblet\ntype: code-card\nauthor: a\ncreated: x\ntags: []\n"
+        write(live / "software/notes/orblet.md", "title: orblet\ntype: code-card\nauthor: a\ncreated: x\ntags: []\n"
               "repo: orblet\nverified_at: abc", "A fitting code.")
-        write(keeper / "generated/gaia-docs/DR4 draft - nss_two_body_orbit.md",
+        write(keeper / "generated/gaia/DR3/datamodel/DR3 - nss_two_body_orbit.md",
               "title: t\ntype: gaia-table\nauthor: g\ncreated: x\ntags: []\nrelease: DR4\ndoc_version: d\ngenerated: true",
               "period: orbital period in days.")
 
         r1 = run(root)
         all1 = {s: (st, arms) for s, st, arms in r1["all"]}
-        expect("every source is indexed", len(all1) == 7, r1["all"])
+        expect("every source is indexed", len(all1) == 8, r1["all"])
         expect("an arm note carries its arm", all1.get("live/binary-stars/notes/BS note.md") == ("note", "binary-stars"),
                all1)
         expect("a note's arms: field adds arms", all1.get("live/milky-way/notes/MW note.md") == ("note", "hot-stars|milky-way"),
                all1)
         expect("the paper PDF carries the paper note's arms", all1.get("Paper A") == ("paper", "binary-stars"), all1)
         expect("a data-model note is source_type docs, in the gaia arm",
-               all1.get("keeper/generated/gaia-docs/DR4 draft - nss_two_body_orbit.md") == ("docs", "gaia"), all1)
-        expect("a code card has no arm", all1.get("live/code/orblet.md") == ("note", ""), all1)
+               all1.get("keeper/generated/gaia/DR3/datamodel/DR3 - nss_two_body_orbit.md") == ("docs", "gaia"), all1)
+        expect("a code card is in the software arm",
+               all1.get("live/software/notes/orblet.md") == ("note", "software"), all1)
+        expect("code in external/ is labelled software",
+               all1.get("code:orblet/fit.py", ("", ""))[1] == "software", all1)
         bs = {s for s, _, _ in r1["bs"]}
         expect("arm=binary-stars: its note and its paper, nothing else",
                bs == {"live/binary-stars/notes/BS note.md", "live/papers/Paper A.md", "Paper A"}, bs)
         expect("source_type=docs: only the documentation",
-               {s for s, _, _ in r1["docs"]} == {"keeper/generated/gaia-docs/DR4 draft - nss_two_body_orbit.md"}, r1["docs"])
+               {s for s, _, _ in r1["docs"]} == {"keeper/generated/gaia/DR3/datamodel/DR3 - nss_two_body_orbit.md"}, r1["docs"])
         expect("arm=gaia: the documentation and the gaia lesson",
-               {s for s, _, _ in r1["gaia"]} == {"keeper/generated/gaia-docs/DR4 draft - nss_two_body_orbit.md",
+               {s for s, _, _ in r1["gaia"]} == {"keeper/generated/gaia/DR3/datamodel/DR3 - nss_two_body_orbit.md",
                                                   "live/gaia/lessons/2026-11-13 - c - Period.md"}, r1["gaia"])
         expect("arm and source_type combine", {s for s, _, _ in r1["bs_paper"]} == {"Paper A"}, r1["bs_paper"])
         expect("a list of arms means any of them", {s for s, _, _ in r1["either"]} == {"live/milky-way/notes/MW note.md"},
@@ -130,7 +135,7 @@ def main() -> int:
 
         write(live / "binary-stars/notes/BS uses period.md",
               "title: BS uses period\ntype: note\nauthor: a\ncreated: x\ntags: []",
-              "Uses [[DR4 draft - nss_two_body_orbit#period|the period]].")
+              "Uses [[DR3 - nss_two_body_orbit#period|the period]].")
         write(live / "milky-way/notes/MW cites A.md", "title: MW cites A\ntype: note\nauthor: a\ncreated: x\ntags: []",
               "The disc population in [[Paper A]].")
         r2 = run(root)

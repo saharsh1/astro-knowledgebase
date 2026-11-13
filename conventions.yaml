@@ -5,7 +5,7 @@
 version: 1
 
 changelog:
-  - "1 (2026-11-13): first version of the astro knowledge base (arms incl. the Gaia foundation arm, live notes, roles in Keeper)."
+  - "1 (2026-11-13): first version of the astro knowledge base (layered arms gaia / software / science, live notes, roles in Keeper)."
 
 # The owner (also in .github/CODEOWNERS). The other roles (curators) are listed in
 # keeper/roles.yaml, not here: this repository is public, the member list is not.
@@ -19,35 +19,45 @@ live_dir: live            # Keeper library "astro-kb-notes"
 keeper_dir: keeper        # Keeper library "astro-kb-data"
 outbox_dir: outbox        # local drafts
 
-# Topical arms: folders live/<arm>/ with these sub-folders. Each arm adds its own tags.
-# A foundation arm (gaia) serves every arm: its tags may be used in any arm, its notes
-# never link into a non-foundation arm (links run from the science arms into Gaia), and
-# the generated Gaia documentation (keeper/generated/gaia-docs) carries its label.
+# Arms: folders live/<arm>/ with these sub-folders, each with its own tags, in layers:
+#   0 gaia      what the Gaia data and documentation say
+#   1 software  the code the group uses and its documentation
+#   2 science   binary-stars, milky-way, hot-stars, ...
+# A note links only to notes of its own layer or a lower one (science -> software ->
+# gaia), and may use the tags of its own arm, of the arms in its `arms:`, and of every
+# lower layer. Generated notes in keeper/generated/<arm>/ belong to that arm.
 arm_folders: [notes, lessons, topics, discussion]
 arms:
   gaia:
     title: Gaia
-    foundation: true
+    layer: 0
     tags: [DataModel, NSS, Validation, EpochAstrometry, EpochPhotometry, Systematics,
            SelectionCriteria, DataRelease]
+  software:
+    title: Software
+    layer: 1
+    tags: [CodeCard, Simulation, OrbitFitting, RadialVelocities, Installation, Testing]
   binary-stars:
     title: Binary stars
+    layer: 2
     tags: [AstrometricBinaries, SpectroscopicBinaries, EclipsingBinaries, Orbits,
            CompactObjects, WhiteDwarfs, BrownDwarfs, SelectionFunction]
   milky-way:
     title: Milky Way
+    layer: 2
     tags: [Kinematics, Populations, Extinction, Chemistry, SelectionFunction]
   hot-stars:
     title: Hot stars
+    layer: 2
     tags: [OBStars, Winds, Rotation, Pulsations]
 
 # Folders of live/ shared by all arms.
-shared_folders: [papers, code, requests]
+shared_folders: [papers, requests]
 
 # Folders of keeper/ that hold generated notes (written by the index keeper only).
 generated_folders: [generated]
-# The arm whose label the generated documentation notes (gaia-table, gaia-section) carry.
-docs_arm: gaia
+# The arm of the code itself (checkouts in external/, demos/) in the search index.
+code_arm: software
 
 # Tags any note may use, in every arm.
 common_tags: [Gaia, Astrometry, RV, Photometry, Spectroscopy, SED, Software]
@@ -71,7 +81,8 @@ types:
   topic: [consolidates]
   request: [id, arm, reason]
 
-# Where each type may live: "arm" = live/<arm>/<folder>, or a shared/generated folder.
+# Where each type may live: "arm:<folder>" = live/<any arm>/<folder>; "<arm>/<folder>" =
+# that arm only; or a shared or generated folder.
 type_places:
   lesson: [arm:lessons]
   discussion: [arm:discussion]
@@ -80,8 +91,8 @@ type_places:
   hub: [arm:notes, generated]
   paper: [papers]
   bibtex: [papers]
-  code-card: [code]
-  recipe: [code, arm:notes]
+  code-card: [software/notes]
+  recipe: [arm:notes]
   request: [requests]
   code-usage: [generated]
   gaia-table: [generated]

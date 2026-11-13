@@ -52,7 +52,7 @@ def skeleton(tmp: Path) -> Path:
 
 def good_notes(root: Path) -> None:
     live = root / "live"
-    for arm in ["gaia", "binary-stars", "milky-way", "hot-stars"]:
+    for arm in ["gaia", "software", "binary-stars", "milky-way", "hot-stars"]:
         (live / arm / "notes").mkdir(parents=True, exist_ok=True)
     note(live / "gaia/lessons/2026-11-13 - carol - corr_vec order.md", """
 title: corr_vec order
@@ -65,13 +65,22 @@ status: current
 applies_to: ["dr3:nss_two_body_orbit.corr_vec"]
 tags: [NSS, DataModel]
 """, "From the documentation; see [[Gaia BH1 paper]] for a use.")
+    note(live / "software/notes/orblet.md", """
+title: orblet
+type: code-card
+author: erin
+created: 2026-11-13
+repo: orblet
+verified_at: ac3eeb7590cd
+tags: [CodeCard, NSS]
+""", "Reads corr_vec in the order of [[2026-11-13 - carol - corr_vec order]].")
     note(live / "hot-stars/notes/Hot binaries.md", """
 title: Hot binaries
 type: note
 author: dave
 created: 2026-11-13
-tags: [NSS, OBStars]
-""", "Decode the covariance as in [[2026-11-13 - carol - corr_vec order]].")
+tags: [NSS, OBStars, OrbitFitting]
+""", "Decode the covariance as in [[2026-11-13 - carol - corr_vec order]], or with [[orblet]].")
     note(live / "binary-stars/lessons/2026-11-13 - alice - Period unit.md", """
 title: Period unit
 type: lesson
@@ -133,7 +142,7 @@ def main() -> int:
 
         good_notes(root)
         code, out = run(root)
-        expect("good notes in four arms (a science note links into gaia; Gaia tags anywhere): no errors", code == 0 and "0 error(s)" in out, out)
+        expect("good notes in five arms (links run down the layers; lower layers' tags allowed): no errors", code == 0 and "0 error(s)" in out, out)
 
         live = root / "live"
         bad = {
@@ -155,6 +164,20 @@ def main() -> int:
             "a gaia note links into a science arm": (
                 live / "gaia/notes/Column use.md",
                 "title: c\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "links run"),
+            "a gaia note links into software": (
+                live / "gaia/notes/Uses code.md",
+                "title: u\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "links run"),
+            "a software note links into a science arm": (
+                live / "software/notes/Back link.md",
+                "title: b\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "links run"),
+            "a software note uses a science arm's tag": (
+                live / "software/notes/Tagged.md",
+                "title: t\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: [Orbits]",
+                "tag 'Orbits' is not allowed"),
+            "a code card outside the software arm": (
+                live / "binary-stars/notes/sedkit.md",
+                "title: s\ntype: code-card\nauthor: bob\ncreated: 2026-11-13\nrepo: sedkit\n"
+                "verified_at: x\ntags: []", "does not belong in binary-stars/notes"),
             "a gaia discussion is about a science note": (
                 live / "gaia/discussion/Period unit - 2026-11-13 1200 - bob.md",
                 "title: d\ntype: discussion\nabout: '[[2026-11-13 - alice - Period unit]]'\nauthor: bob\n"
@@ -183,7 +206,9 @@ def main() -> int:
         }
         for name, (path, fm, needle) in bad.items():
             body = {"broken link": "[[No such note]]",
-                    "a gaia note links into a science arm": "Used in [[Hot binaries]]."}.get(name, "")
+                    "a gaia note links into a science arm": "Used in [[Hot binaries]].",
+                    "a gaia note links into software": "Decoded by [[orblet]].",
+                    "a software note links into a science arm": "Used in [[Hot binaries]]."}.get(name, "")
             note(path, fm, body)
             code, out = run(root)
             expect(f"catches: {name}", code == 1 and needle in out, out)

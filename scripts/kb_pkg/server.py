@@ -7,7 +7,6 @@ Tools:
 - lookup_column    exact record of one Gaia archive column (never a guess)
 - find_columns     exact list of columns whose name or description contains a text
 """
-import csv
 import json
 from functools import lru_cache
 
@@ -57,8 +56,9 @@ def search_kb(query: str, k: int | None = None, source_type: str | None = None,
               author: str | None = None, arm: str | None = None) -> list[dict]:
     """Search the astro knowledge base by meaning. With no filter: everything (all arms'
     notes, the curated papers' PDFs, the group's code, the Gaia documentation).
-    arm='<arm>' (e.g. 'binary-stars', 'milky-way'): that arm's notes and the papers linked
-    to it. source_type='note'|'paper'|'code'|'docs' ('docs' = Gaia data-model and
+    arm='<arm>': 'gaia' (Gaia notes, papers and documentation), 'software' (code cards,
+    code and its documentation), or a science arm ('binary-stars', 'milky-way', ...): that
+    arm's notes and the papers linked to it. source_type='note'|'paper'|'code'|'docs' ('docs' = Gaia data-model and
     documentation notes). author='<surname>' for papers or '<repository>' for code.
     Filters combine. Cite as 'source, where'. For exact column names, types, units or
     flags use lookup_column instead."""
@@ -75,17 +75,10 @@ def get_neighbors(source_id: str, ordinal: int = 0, radius: int = 1) -> list[dic
 @lru_cache(maxsize=1)
 def _columns() -> dict:
     out = {}
-    for label, path in config.PARSED_COLUMNS.items():
-        if path.exists():
-            for l in open(path):
-                c = json.loads(l)
-                out[(label, c["table"], c["column"])] = c
-    if config.DR3_COLUMNS.exists():
-        for r in csv.DictReader(open(config.DR3_COLUMNS)):
-            t = r["table_name"].split(".", 1)[-1]
-            out[("DR3 archive", t, r["column_name"])] = {
-                "table": t, "column": r["column_name"], "datatype": r["datatype"],
-                "unit": r["unit"] or None, "ucd": r["ucd"], "short_description": r["description"]}
+    for release, path in config.parsed_columns().items():
+        for l in open(path):
+            c = json.loads(l)
+            out[(release, c["table"], c["column"])] = c
     return out
 
 
@@ -98,18 +91,13 @@ def _usage() -> dict:
             for l in open(f):
                 r = json.loads(l)
                 u[(name, r["table"], r["column"])] = r.get("papers") or r.get("uses")
-    f = config.USAGE_DIR / "DR3-strict" / "usage.jsonl"
-    if f.exists():
-        for l in open(f):
-            r = json.loads(l)
-            u[("scix", r["table"], r["column"])] = r["n"]
     return u
 
 
 @mcp.tool()
 def lookup_column(table: str, column: str) -> dict:
-    """Exact record of a Gaia archive column from the parsed data models (DR4
-    draft data model, DR3 archive column list): type, unit, description, PDF pages,
+    """Exact record of a Gaia archive column from the parsed data model of each
+    release (keeper/parsed/gaia/<release>/): type, unit, description, pages,
     and where it is used: the notes of every arm (by applies_to or a link to the
     column), the curated papers and the group's code. Use this, never
     memory or search_kb, for column names, types, units and flag bits."""
@@ -124,11 +112,10 @@ def lookup_column(table: str, column: str) -> dict:
         similar = [f"{table}.{c}" for c in close] + other
         return {"found": False, "table": table, "column": column, "similar": similar}
     return {"found": True, "table": table, "column": column, "records": found,
-            "note": f"[[DR4 draft - {table}#{column}]]" if "DR4 draft" in found else None,
+            "data_model_notes": [f"[[{release} - {table}#{column}]]" for release in found],
             "notes": notes_using_column(table, column),
             "curated_papers": use.get(("papers", table, column), []),
-            "group_code": use.get(("code", table, column), []),
-            "scix_papers_2022_2026": use.get(("scix", table, column))}
+            "group_code": use.get(("code", table, column), [])}
 
 
 @mcp.tool()

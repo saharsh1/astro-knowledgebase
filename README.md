@@ -1,8 +1,9 @@
 # Astro knowledge base
 
 The group's shared knowledge base: notes, papers, Gaia documentation, code cards and
-lessons, organised in **arms**: `gaia` (the foundation: documentation, data model,
-validation, Gaia papers) and the science arms (binary stars, Milky Way, hot stars, …).
+lessons, organised in **arms** in three layers: `gaia` (documentation, data model,
+verification papers), `software` (the group's code and its documentation), and the science
+arms (binary stars, Milky Way, hot stars, …).
 Read in Obsidian and searched with Claude.
 
 This public repository is the **skeleton**: rules (`CLAUDE.md`), conventions, templates,
@@ -15,10 +16,14 @@ access to them, the skeleton still runs its checks and tests.
 - Done: rules, conventions, templates, checker, hooks; the skills `/publish`,
   `/request-paper`, `/ingest`, `/lesson`, `/digest`, `/consolidate`, `/resolve` and their
   scripts; arm and docs labels in the search index, with `arm=` and `source_type="docs"`;
-  the `gaia` foundation arm (one-way links, notes in `lookup_column`); the public guard
-  (`check_public.py`) and the licences.
+  the layered arms gaia / software / science (links run down the layers; notes in
+  `lookup_column`); the public guard (`check_public.py`) and the licences.
+- Next: `scripts/build/`: the Gaia documentation and data model (DR3 now, DR4 from its
+  release on 2 December 2026), the verification papers from ESA's papers pages (with PDF
+  text cleaning), the code documentation; then a fresh index. Nothing is imported from the
+  old binary stars knowledge base.
 - To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
-  script; the import of the binary stars knowledge base.
+  script.
 
 The design is in `docs/design/`.
 

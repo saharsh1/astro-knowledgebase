@@ -70,7 +70,9 @@ class Vault:
                 parts = path.relative_to(self.keeper).parts
             except ValueError:
                 return None, None
-            return (None, "generated") if parts and parts[0] in self.conv["generated_folders"] else (None, None)
+            if not parts or parts[0] not in self.conv["generated_folders"]:
+                return None, None
+            return (parts[1] if len(parts) >= 3 and parts[1] in self.arms else None), "generated"
         if len(parts) >= 3 and parts[0] in self.arms and parts[1] in self.conv["arm_folders"]:
             return parts[0], f"arm:{parts[1]}"
         if len(parts) >= 2 and parts[0] in self.conv["shared_folders"]:
@@ -91,13 +93,14 @@ class Vault:
     def missing_arms(self) -> list[str]:
         return [a for a in self.arms if not (self.live / a).is_dir()]
 
-    def foundation(self) -> set[str]:
-        """Arms that serve every arm (gaia): their tags are allowed everywhere."""
-        return {a for a, spec in self.arms.items() if (spec or {}).get("foundation")}
+    def layer(self, arm: str | None) -> int | None:
+        """0 gaia, 1 software, 2 science arms (conventions.yaml); None for shared notes."""
+        return None if arm is None else int((self.arms.get(arm) or {}).get("layer", 2))
 
     def allowed_tags(self, arm: str | None, fm: dict) -> set[str]:
         tags = set(self.conv["common_tags"])
-        arms = set(self.arms) if arm is None else {arm, *as_list(fm.get("arms")), *self.foundation()}
+        lower = {a for a in self.arms if arm and self.layer(a) < self.layer(arm)}
+        arms = set(self.arms) if arm is None else {arm, *as_list(fm.get("arms")), *lower}
         for a in arms:
             tags |= set(self.arms.get(a, {}).get("tags", []))
         return tags
@@ -109,6 +112,10 @@ def check_skeleton(conv: dict, errors: list[str]) -> None:
         if t not in types:
             errors.append(f"conventions.yaml: type_places names unknown type '{t}'")
         for p in places:
+            if "/" in p:
+                a, p = p.split("/", 1)
+                if a not in conv["arms"]:
+                    errors.append(f"conventions.yaml: type '{t}' placed in unknown arm '{a}'")
             p = p.removeprefix("arm:")
             if p not in conv["arm_folders"] + conv["shared_folders"] + conv["generated_folders"]:
                 errors.append(f"conventions.yaml: type '{t}' placed in unknown folder '{p}'")
@@ -120,8 +127,11 @@ def check_skeleton(conv: dict, errors: list[str]) -> None:
     for name in ["Lesson", "Note", "Discussion", "Topic", "Request"]:
         if not (ROOT / "templates" / f"{name}.md").exists():
             errors.append(f"templates/{name}.md is missing")
-    if conv.get("docs_arm") and conv["docs_arm"] not in conv["arms"]:
-        errors.append(f"conventions.yaml: docs_arm '{conv['docs_arm']}' is not an arm")
+    if conv.get("code_arm") and conv["code_arm"] not in conv["arms"]:
+        errors.append(f"conventions.yaml: code_arm '{conv['code_arm']}' is not an arm")
+    for a, spec in conv["arms"].items():
+        if not isinstance((spec or {}).get("layer"), int):
+            errors.append(f"conventions.yaml: arm '{a}' needs an integer 'layer'")
     overlap = set(conv["common_tags"]) & {t for a in conv["arms"].values() for t in a.get("tags", [])}
     if overlap:
         errors.append(f"conventions.yaml: tags both common and arm-specific: {sorted(overlap)}")
@@ -158,15 +168,18 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
     arm, place = v.place(place_path)
     if place is None:
         errors.append(f"{rel}: not in an arm folder, a shared folder or a generated folder")
-    elif place not in conv["type_places"].get(ntype, []):
-        errors.append(f"{rel}: a '{ntype}' does not belong in {place.replace('arm:', '<arm>/')}")
+    elif place not in conv["type_places"].get(ntype, []) and \
+            not (arm and place.startswith("arm:") and f"{arm}/{place[4:]}" in conv["type_places"].get(ntype, [])):
+        where = f"{arm}/{place[4:]}" if place.startswith("arm:") else place
+        errors.append(f"{rel}: a '{ntype}' does not belong in {where} "
+                      f"(allowed: {', '.join(conv['type_places'].get(ntype, []))})")
     if place == "generated" and not fm.get("generated") and ntype not in ("hub",):
         warnings.append(f"{rel}: in a generated folder but has no 'generated: true'")
 
     for a in as_list(fm.get("arms")) + ([fm["arm"]] if ntype == "request" and fm.get("arm") else []):
         if a not in v.arms:
             errors.append(f"{rel}: arm '{a}' is not in conventions.yaml")
-    allowed = v.allowed_tags(arm, fm)
+    allowed = v.allowed_tags(None if place == "generated" else arm, fm)
     for tag in as_list(fm.get("tags")):
         if tag not in allowed:
             errors.append(f"{rel}: tag '{tag}' is not allowed here (common tags or tags of its arms)")
@@ -198,12 +211,13 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
 
     body = COMMENT.sub("", FENCE.sub("", text))
     targets += [t.strip() for t in WIKILINK.findall(body)]
-    if arm in v.foundation():                       # links run into Gaia, never out of it
+    if arm and place != "generated":                # links run down the layers: science -> software -> gaia
         for target in sorted(set(targets)):
             other = stems.get(target)
-            if other and other not in v.foundation():
-                errors.append(f"{rel}: a {arm} note links to [[{target}]] in the {other} arm; links run "
-                              f"from the other arms into {arm}, so put this link in a note of the {other} arm")
+            if other and v.layer(other) > v.layer(arm):
+                errors.append(f"{rel}: a {arm} note (layer {v.layer(arm)}) links to [[{target}]] in {other} "
+                              f"(layer {v.layer(other)}); links run from higher layers to lower ones only, "
+                              f"so put this link in a note of {other}")
     for target in WIKILINK.findall(body):
         target = target.strip()
         if ATTACHMENT.search(target) or target in stems:
