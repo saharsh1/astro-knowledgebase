@@ -20,7 +20,7 @@ dependencies:
   - nbconvert
   - ipykernel
   - emcee
-  - pymupdf>=1.24
+  - pymupdf>=2.1,<3   # table detection in scripts/build/datamodel_pdf.py was checked with 2.1
   - pytorch>=2.2              # from conda-forge, not pip: pip's torch bundles a second OpenMP runtime (crash on macOS)
   - sentence-transformers>=3.0
   - pip

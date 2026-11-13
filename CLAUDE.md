@@ -74,6 +74,9 @@ plus every arm whose notes cite it (generated).
 - **Content comes from sources.** The Gaia documentation, data model and verification
   papers, and the code documentation, are built by `scripts/build/` from the sources listed
   in `sources.yaml`. Nothing is added to Keeper by hand.
+- **Drafts are labelled.** The DR4 data model in use until the release is ESA's draft of
+  2026-06-26, labelled `DR4-draft` (notes `DR4-draft - <table>`, `release_status: draft`,
+  `lookup_column` records with `status: draft`). Say so when answering from it.
 
 File names are unique across all arms, so wikilinks `[[Title]]` work across arms.
 
