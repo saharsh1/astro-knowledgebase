@@ -44,6 +44,9 @@ def first_author(stem: str) -> str | None:
     head = stem.split("(", 1)[0].strip()
     if not head:
         return None
+    m = re.match(r"^[\w\s-]*Collaboration,\s*(.+)$", head)     # "Gaia Collaboration, Klioner et al" -> "Klioner"
+    if m:
+        head = m.group(1).strip()
     # 'Doe et al', 'Smith and Jones', 'Doe & Roe', or 'Doe'
     token = re.split(r"\s+(?:et al|and|&)\b", head)[0].strip()
     return token.split()[0] if token else None

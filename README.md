@@ -30,7 +30,11 @@ access to them, the skeleton still runs its checks and tests.
 - Built: the `software` arm's generated part: the five pinned repositories checked out
   (`scripts/fetch_code.py`), the Gaia columns their code reads (`scripts/build/code_usage.py`),
   and one summary note per repository (`scripts/build/software_docs.py`).
-- Next: a fresh index; the DR4 papers and documentation at the release. Nothing is imported from the
+- Built: the first index of all of it (local `index/`, 2026-11-13): 21,215 passages from
+  1,086 sources, 56 min on Apple MPS: Gaia documentation 12,698, papers 5,038, code 3,181,
+  notes 298. BibTeX notes are not indexed.
+- Next: drop author and affiliation lists from the paper text (they rank high for some
+  queries); `/publish-index`; the DR4 papers and documentation at the release. Nothing is imported from the
   old binary stars knowledge base.
 - To come: `/sync`, `/share`, `/publish-index`; `setup.sh` and `doctor.py`; the snapshot
   script.
