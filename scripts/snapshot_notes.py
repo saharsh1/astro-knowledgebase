@@ -56,12 +56,14 @@ def manifest_of(snap: Path) -> dict:
 
 
 def scan() -> dict[str, dict]:
-    """path in live/ -> {size, sha256, author, title} for every file there (no hidden files)."""
+    """path in live/ -> {size, sha256, author, title} for every file in its folders (notes are
+    always in a folder: live/<arm>/..., live/papers/, live/requests/)."""
     out = {}
     for f in sorted(LIVE.rglob("*")):
         rel = f.relative_to(LIVE)
-        if not f.is_file() or any(part.startswith(".") for part in rel.parts):
-            continue
+        if not f.is_file() or any(part.startswith(".") for part in rel.parts) or len(rel.parts) == 1:
+            continue                                   # hidden files; files at the library's root are
+                                                       # Keeper's own (archive-metadata.md, its how-to PDF)
         data = f.read_bytes()
         rec = {"size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
         if f.suffix == ".md":

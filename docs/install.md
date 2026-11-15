@@ -73,7 +73,8 @@ Keeper data, 1.3 GB for the search model, the rest for the Python environment.
    | `astro-kb-data` | `astro-knowledgebase/keeper` |
    | `astro-kb-notes` | `astro-knowledgebase/live` |
 
-   Wait until both are synced (about 2 GB).
+   Wait until both are synced (about 2 GB). Keeper puts two files of its own at the top of
+   every library (`archive-metadata.md` and `Cared-Data-Certificate-HowTo.pdf`): leave them.
 4. **Run the setup** from the clone. It asks for your GitHub user name once:
 
    ```bash

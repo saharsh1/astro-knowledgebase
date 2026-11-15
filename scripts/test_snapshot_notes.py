@@ -60,6 +60,7 @@ def main() -> int:
         note(root, "gaia/notes/RUWE.md", "ben", "RUWE above 1.4.")
         note(root, "gaia/notes/Old.md", "ben", "To be deleted.")
         (root / "live/.seafile-tmp").write_text("x")
+        (root / "live/archive-metadata.md").write_text("Keeper puts this file in every library")
         snaps = root / "keeper/snapshots"
 
         user("member1")
@@ -71,7 +72,7 @@ def main() -> int:
         expect("the first snapshot is taken", r.returncode == 0 and len(zips) == 1, r.stdout + r.stderr)
         with zipfile.ZipFile(zips[0]) as z:
             names, man = set(z.namelist()), json.loads(z.read("manifest.json"))
-        expect("it holds every note and a manifest, no hidden files",
+        expect("it holds every note and a manifest, no hidden files and not Keeper's own files",
                names == {"gaia/notes/Zero point.md", "gaia/notes/RUWE.md", "gaia/notes/Old.md", "manifest.json"}, names)
         expect("the manifest records author and checksum", man["files"]["gaia/notes/RUWE.md"]["author"] == "ben"
                and len(man["files"]["gaia/notes/RUWE.md"]["sha256"]) == 64 and man["previous"] is None, man)
