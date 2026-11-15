@@ -129,7 +129,7 @@ def keeper(full: bool) -> None:
     else:
         marker = CONV.get("conflict_marker", "SFConflict")
         conflicts = [p for p in LIVE.rglob("*") if marker in p.name]
-        notes = sum(1 for _ in LIVE.rglob("*.md"))
+        notes = sum(1 for p in LIVE.rglob("*.md") if p.parent != LIVE)     # the root holds Keeper's own files
         if conflicts:
             say("WARN", "live/", f"{notes} notes; {len(conflicts)} Seafile conflict cop(ies): run /resolve")
         else:
