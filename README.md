@@ -1,92 +1,89 @@
 # Astro knowledge base
 
-The group's shared knowledge base: notes, papers, Gaia documentation, code cards and
-lessons, organised in **arms** in three layers: `gaia` (documentation, data model,
-verification papers), `software` (the group's code and its documentation), and the science
-arms (binary stars, Milky Way, hot stars, …).
-Read in Obsidian and searched with Claude.
+Welcome. This is the shared knowledge base of our group: what we have read, what the Gaia
+documentation says, what our code does, and what we have learned the hard way, in one place
+that you can read in Obsidian and question with Claude.
 
-This public repository is the **skeleton**: rules (`CLAUDE.md`), conventions, templates,
-scripts and skills. The notes and data are not here. They live in two closed Keeper
-libraries, which the Seafile app syncs into `live/` (notes) and `keeper/` (data). Without
-access to them, the skeleton still runs its checks and tests.
+**New here? Go to [docs/install.md](docs/install.md).** It takes about 20 minutes.
 
-**To install it, or to add a member: [docs/install.md](docs/install.md).**
+## What you can do with it
 
-**Status (2026-11-15): built; beta testing with the first members.**
+Ask Claude, in plain words, inside this folder:
 
-- Done: rules, conventions, templates, checker, hooks; the skills `/publish`,
-  `/request-paper`, `/ingest`, `/lesson`, `/digest`, `/consolidate`, `/resolve` and their
-  scripts; arm and docs labels in the search index, with `arm=` and `source_type="docs"`;
-  the layered arms gaia / software / science (links run down the layers; notes in
-  `lookup_column`); the public guard (`check_public.py`) and the licences.
-- Built: the DR4 **draft** data model (2026-06-26), `scripts/build/gaia_datamodel.py DR4-draft`:
-  141 tables, 4,629 columns, labelled `DR4-draft` everywhere; replaced by the formal DR4
-  data model at the release (planned 2 December 2026).
-- Built: the DR3 documentation 1.3, `scripts/build/gaia_docs.py DR3`: a snapshot of the
-  646 web pages; 94 data-model tables, 2,093 columns, checked against the archive's own
-  column list; 552 section notes with links between pages and to columns.
-- Built: the papers on ESA's DR3 and EDR3 papers pages (57), `scripts/build/gaia_papers.py DR3|EDR3`
-  (arm `gaia`; metadata from Crossref and arXiv, no token needed; PDFs from arXiv), and
-  their cleaned text, `scripts/build/paper_text.py` (ligatures, split words, reference lists).
-- Built: the `software` arm's generated part: the five pinned repositories checked out
-  (`scripts/fetch_code.py`), the Gaia columns their code reads (`scripts/build/code_usage.py`),
-  and one summary note per repository (`scripts/build/software_docs.py`).
-- Built: the first index of all of it (local `index/`, 2026-11-13): 21,215 passages from
-  1,086 sources, 56 min on Apple MPS: Gaia documentation 12,698, papers 5,038, code 3,181,
-  notes 298. BibTeX notes are not indexed.
-- The paper text leaves out reference lists and author and affiliation lists (Gaia
-  Collaboration papers list hundreds of authors, which ranked high in search).
-- Built: `/publish-index` (`scripts/publish_index.py`): the index keeper publishes the index
-  to `keeper/index/` with a version, an archive of 3 earlier versions and a history line in
-  Keeper (not in git: it names private notes); members `--pull` it. `scripts/regenerate.sh`
-  rebuilds the software arm's notes after the code pins move.
-- Next: the DR4 papers and documentation at the release. Nothing is imported from the
-  old binary stars knowledge base.
-- Built: `/sync` (`scripts/sync.py`): pulls the skeleton (fast-forward only, never over local
-  changes), checks both Keeper libraries, conflict copies and drafts, puts the code at its pins,
-  copies a newer published index and indexes what is newer here. About 5 s when nothing changed.
-- Built: `/share` (`scripts/share.py`): a change to the skeleton becomes a branch
-  `<user>/<date>-<topic>` and a pull request, committed only after the public-repository guard,
-  the checker and the GitHub check's tests pass; pushed only after the user's yes.
-- Built: `scripts/setup.sh` (environment, `config.local`, GitHub name, pre-commit check, the
-  pinned search model, then the `/sync` steps and the doctor) and `scripts/doctor.py` (16 checks
-  of setup, content and a working search server; changes nothing; `--fast` skips the model).
-- Measured: `scripts/eval_search.py` runs the questions of `scripts/eval_questions.yaml` (30, each
-  with its right sources). 2026-11-13: right source first for 20, in the top 5 for 28, in the top 10
-  for all 30; 7.6 different sources per top 10. A result list holds at most 2 passages of one
-  source (`per_source`); the documentation's bibliography is not indexed.
-- Each paper passage starts with its paper's title and section (found from the numbered headings),
-  so a hit says where it is from. The headings are told by their font when the paper text is
-  cleaned (`paper_text.py`): 1,922 headings in the 56 papers, numbered lists excluded. Measured on
-  the 30 questions: first 19, top 3 26, top 5 29, top 10 30.
-- Built: `scripts/snapshot_notes.py` (owner): a dated zip of all notes in `keeper/snapshots/` and a
-  report of what changed since the one before (new, changed, deleted, author changed, conflict
-  copies, review markers); `--restore` writes into `outbox/`. Each index version names the newest
-  snapshot. First snapshot: `notes-2026-11-13`.
+- *"What does `ruwe` mean, and in which tables is it?"* The answer comes from the Gaia data
+  model itself: type, unit, description, and where our papers and code use the column.
+- *"How were the astrometric orbits in DR3 validated?"* Claude searches the Gaia
+  documentation and the data-release papers, and cites the paper, section and page.
+- *"Which of our codes fits an orbit to radial velocities?"* It searches the group's
+  repositories too.
+- *"Write a digest of what we have on the parallax zero point."* You get a note with every
+  claim cited, to share with the group.
+- *"Remember this for the group: ..."* A pitfall or a trick becomes a signed, dated lesson
+  that everyone can find later.
 
-The design is in `docs/design/`.
+## What is in it
 
-Check the skeleton and run the tests:
+| Part | Holds |
+|---|---|
+| **Gaia** | The DR3 documentation and data model, the DR4 draft data model (the formal one follows at the release), and the 57 data-release papers of DR3 and EDR3 |
+| **Software** | The group's code repositories, each pinned to a commit: what they do and which Gaia columns they read |
+| **Science arms** | Our own notes, lessons and digests on binary stars, the Milky Way and hot stars. These grow as we write |
+| **Papers** | One note per paper, shared by all arms |
+
+Only public material is here: released documentation and published papers. No unreleased
+data and no internal documents.
+
+## How it is put together
+
+Three places, and you need all three:
+
+| Place | Holds | Who writes |
+|---|---|---|
+| **This git repository** | The rules, scripts, templates and Claude skills: the skeleton | The owner; anyone can propose a change |
+| **Keeper library `astro-kb-data`** (folder `keeper/`) | PDFs, the Gaia documentation, the search index | The owner and curators; members read |
+| **Keeper library `astro-kb-notes`** (folder `live/`) | The group's notes | Every member |
+
+The notes and data are not in this repository. Keeper syncs them to your machine, and a
+note you publish reaches everyone within minutes. The search runs on your own machine;
+nothing is sent to a service.
+
+## Everyday commands
+
+Say these to Claude:
+
+| You want to | Say |
+|---|---|
+| start a session up to date | `/sync` |
+| record something the group should know | `/lesson`, then `/publish` |
+| a cited summary of a topic | `/digest <topic>`, then `/publish` |
+| have a paper added | `/request-paper <arXiv id or DOI>` |
+| merge the group's notes on one topic | `/consolidate <topic>` |
+| propose a change to scripts, templates or rules | `/share` |
+| settle a conflict copy made by Keeper | `/resolve` |
+
+## Four rules from the first day
+
+1. **Public material only.** No unreleased Gaia data, no internal DPAC documents.
+2. **Notes reach the group through `/publish`,** which checks them first. Do not save new
+   notes straight into `live/`.
+3. **One writer per note.** Do not edit someone else's note; add to its discussion.
+4. **Calculations and notebooks go in `sandbox/`,** which is never shared.
+
+The full rules are in [CLAUDE.md](CLAUDE.md); Claude reads them at the start of every session.
+
+## If something does not work
 
 ```bash
-python scripts/check_vault.py
-python scripts/check_public.py
-python scripts/test_check_public.py
-python scripts/test_check_vault.py
-python scripts/test_notes_flow.py
-python scripts/test_consolidate_resolve.py
-python scripts/test_paper_text.py
-python scripts/test_snapshot_notes.py
-python scripts/test_build_software.py
-python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
-python scripts/test_publish_index.py   # needs lancedb
-python scripts/test_sync.py            # needs lancedb
-python scripts/test_paper_sections.py  # needs pymupdf
-python scripts/test_share.py           # runs the GitHub check's tests in a copy (not in CI itself)
-python scripts/test_setup_doctor.py    # needs the full environment and the model in the cache
-python scripts/test_build_datamodel.py  # needs pymupdf; checks the DR4 draft if keeper/ has it
-python scripts/test_build_docs.py --real # needs beautifulsoup4; checks the DR3 build if keeper/ has it
+python scripts/doctor.py
 ```
+
+It changes nothing and says, line by line, what is missing. If that does not settle it,
+ask the owner.
+
+## More
+
+- [docs/install.md](docs/install.md): install it, add a member, the roles.
+- [docs/status.md](docs/status.md): what was built and how it is tested, for maintainers.
+- [docs/design/](docs/design/): the design and the reasons behind it.
 
 Licences: MIT for the code (`LICENSE`), CC BY 4.0 for the text (`LICENSE-docs.md`).
