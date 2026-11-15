@@ -11,7 +11,9 @@ scripts and skills. The notes and data are not here. They live in two closed Kee
 libraries, which the Seafile app syncs into `live/` (notes) and `keeper/` (data). Without
 access to them, the skeleton still runs its checks and tests.
 
-**Status (2026-11-13): under construction.**
+**To install it, or to add a member: [docs/install.md](docs/install.md).**
+
+**Status (2026-11-15): built; beta testing with the first members.**
 
 - Done: rules, conventions, templates, checker, hooks; the skills `/publish`,
   `/request-paper`, `/ingest`, `/lesson`, `/digest`, `/consolidate`, `/resolve` and their
