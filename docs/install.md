@@ -33,6 +33,11 @@ The knowledge base has three places:
    index_keepers: []                           # may publish the search index; the owner always may
    ```
 
+   The file only tells the skills what to offer a person (`/ingest` to a curator,
+   `/request-paper` to everyone else). The real lock is Keeper: without a Read-Write share of
+   `astro-kb-data` nobody can add a paper or publish the index. If you do both jobs
+   yourself, leave the two lists empty.
+
 ## Owner: for each new member
 
 Ask the member for their **GitHub user name** and their **Keeper account** (the e-mail
@@ -44,7 +49,10 @@ address they log in to Keeper with). Then:
    push a branch); `main` stays protected by the rules above.
 2. **Keeper, data:** library `astro-kb-data` → Share → the member's account → **Read-Only**.
 3. **Keeper, notes:** library `astro-kb-notes` → Share → the member's account → **Read-Write**.
-4. **Curator?** Add their GitHub user name to `curators:` in `keeper/roles.yaml`.
+4. **Curator or index keeper?** Two steps, and both are needed:
+   - add their GitHub user name to `curators:` (or `index_keepers:`) in `keeper/roles.yaml`;
+   - change their share of `astro-kb-data` to **Read-Write**: adding a paper or publishing
+     the index writes into that library.
 5. Send them this page.
 
 Removing a member: remove the two Keeper shares and the GitHub collaborator, and take the
