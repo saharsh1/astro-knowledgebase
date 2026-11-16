@@ -25,3 +25,4 @@ jobs:
       - run: python scripts/test_paper_text.py
       - run: python scripts/test_snapshot_notes.py
       - run: python scripts/test_build_software.py
+      - run: python scripts/test_build_home.py

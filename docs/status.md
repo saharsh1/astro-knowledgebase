@@ -57,10 +57,14 @@ first members. The published search index is version 2026-11-13.4 (21,007 passag
   report of what changed since the one before (new, changed, deleted, author changed, conflict
   copies, review markers); `--restore` writes into `outbox/`. Each index version names the newest
   snapshot. First snapshot: `notes-2026-11-13`.
+- Built: `scripts/build/home.py` (index keeper, at `/publish-index`): the entry pages in
+  `keeper/generated/`: Home, `Index - papers`, `Index - lessons` and one `Arm - <name>` page per
+  arm. `--bookmarks` (run by `setup.sh`) bookmarks them in Obsidian on each machine. Not in the
+  search index.
 
 ## Tests
 
-The first nine run on every pull request (`.github/workflows/check.yml`). The others need
+The first ten run on every pull request (`.github/workflows/check.yml`). The others need
 the full Python environment, and some need the Keeper data.
 
 ```bash
@@ -73,6 +77,7 @@ python scripts/test_consolidate_resolve.py
 python scripts/test_paper_text.py
 python scripts/test_snapshot_notes.py
 python scripts/test_build_software.py
+python scripts/test_build_home.py
 python scripts/test_index_labels.py     # needs the full environment (lancedb, pymupdf)
 python scripts/test_publish_index.py   # needs lancedb
 python scripts/test_sync.py            # needs lancedb

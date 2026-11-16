@@ -112,6 +112,16 @@ File names are unique across all arms, so wikilinks `[[Title]]` work across arms
 | `index/`, `external/` | your search index, code checkouts | no (local) |
 | `templates/`, `scripts/`, `.claude/`, `docs/` | templates, tools, skills, hooks, design | yes (public) |
 
+## Home and the entry pages
+
+`keeper/generated/Home.md` is the entry point. With it: `Index - papers` (the literature),
+`Index - lessons`, and one `Arm - <name>` page per arm (`keeper/generated/<arm>/`). All are
+written by `scripts/build/home.py` from the notes' frontmatter, by the index keeper at
+`/publish-index`; a note published since then appears at the next one. On Home, the text
+above `<!-- home:start -->` is the owner's and is kept. A note with `pinned: true` in its
+frontmatter is listed under "Pinned" on Home; only the owner pins or unpins. These pages are
+not in the search index.
+
 ## Note types
 
 Every note has YAML frontmatter with `title`, `type`, `created`, `author`, `tags`. The

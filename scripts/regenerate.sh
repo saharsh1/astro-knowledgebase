@@ -13,4 +13,5 @@ PY=${PY:-python3}
 "$PY" scripts/fetch_code.py
 "$PY" scripts/build/code_usage.py
 "$PY" scripts/build/software_docs.py
+"$PY" scripts/build/home.py
 "$PY" scripts/check_vault.py --keeper

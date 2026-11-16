@@ -93,7 +93,9 @@ Keeper data, 1.3 GB for the search model, the rest for the Python environment.
    check that runs before each commit, downloads the search model (1.3 GB), copies the
    published search index, and ends with the doctor: one line per check. Every line should
    say OK. A WARN or FAIL line says what to do; run the setup again after fixing it.
-5. **Open the folder in Obsidian** ("Open folder as vault" → `astro-knowledgebase`).
+5. **Open the folder in Obsidian** ("Open folder as vault" → `astro-knowledgebase`). The
+   setup bookmarked the entry pages (the bookmark icon in the left panel): **Home**, the
+   papers index, the lessons index, and one page per arm. Start at Home.
 6. **Open the folder in Claude Code** and approve the search server `astro-kb` when asked.
    Try: "look up the column ruwe in gaia_source" and "what do we have on astrometric orbits?".
 

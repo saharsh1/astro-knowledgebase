@@ -32,12 +32,16 @@ Run from the repository root with the knowledge base's Python (the `bskb` enviro
    `keeper/index/history.jsonl`, and copies the result to `index/`.
    - It refuses when the embedding model or its revision changed: that needs a full
      rebuild (`python -m kb_pkg.index --rebuild`, about an hour) — ask the user first.
-6. **Report** in a short table: version, passages (by source type and by arm), sources
+6. **Entry pages.** `python scripts/build/home.py`: Home, `Index - papers`, `Index - lessons`
+   and one `Arm - <name>` page per arm, in `keeper/generated/`, from the notes' frontmatter.
+   Run it after every publish (Home shows the index version). The search index skips these
+   pages, so this does not make the index stale.
+7. **Report** in a short table: version, passages (by source type and by arm), sources
    added / updated / removed, build time. Nothing goes to git: the history names private
    notes, so it stays in Keeper.
 
 Roll back: `python scripts/publish_index.py --restore <version>` (the archived versions are
-in `--status`). Then report as in step 6.
+in `--status`). Then run step 6 and report as in step 7.
 
 Never edit, move or delete files in `keeper/index/` by hand; the script holds the lock
 while it writes. Never publish from a branch or with uncommitted changes to the code.
