@@ -1,103 +1,172 @@
 # Install the astro knowledge base
 
-Two parts: what the **owner** does once (and once per new member), and what each **member**
-does on their machine. A member needs about 20 minutes, most of it waiting for downloads.
+This page is for a **member** who installs the knowledge base on their own machine. The
+owner's steps (creating the libraries, adding a member, roles) are in [owner.md](owner.md).
 
-The knowledge base has three places:
+**Time:** your own actions take about 15 minutes. The downloads take longer: plan about an
+hour in total, and let them run while you do something else.
 
-| Place | Holds | You get it by |
+**Disk:** about 6 GB.
+
+**System:** macOS or Linux. Windows is not tested.
+
+## What you will have at the end
+
+One folder, `astro-knowledgebase`, with three parts that come from three places:
+
+| Part of the folder | Holds | Comes from |
 |---|---|---|
-| The git repository `astro-knowledgebase` (GitHub) | rules, scripts, templates, skills: the skeleton | `git clone` |
-| Keeper library `astro-kb-data` → folder `keeper/` | PDFs, Gaia documentation, the search index; read-only for members | the Keeper desktop client |
-| Keeper library `astro-kb-notes` → folder `live/` | the group's notes; everyone writes | the Keeper desktop client |
+| the folder itself | rules, scripts, templates: the skeleton | GitHub (`git clone`) |
+| `keeper/` | PDFs, the Gaia documentation, the search index. You read it; you do not change it | Keeper library `astro-kb-data` |
+| `live/` | the group's notes. Everyone writes here, through `/publish` | Keeper library `astro-kb-notes` |
 
-## Owner: once
+You open this one folder in Obsidian to read, and in Claude Code to ask questions.
 
-1. **GitHub.** Create the repository `astro-knowledgebase` (empty), then from the clone:
-   `git remote add origin <url>` and `git push -u origin main`. This is the only direct push
-   to `main`.
-2. **Protect `main`** (Settings → Branches → Add rule for `main`): require a pull request,
-   require the status check `check`, require review from Code Owners, allow squash merges
-   only (Settings → General → Pull Requests). On a private repository of a free account
-   GitHub does not enforce these rules; they take effect when the repository is public (or
-   on a paid plan). Until then the rule is kept by agreement: nobody pushes to `main`.
-3. **Keeper.** In the Keeper web page create two libraries, `astro-kb-data` and
-   `astro-kb-notes`. In the desktop client choose "Sync with an existing folder" and point
-   them to `astro-knowledgebase/keeper` and `astro-knowledgebase/live`. Wait until both
-   show as synced.
-4. **Roles.** Write `keeper/roles.yaml` by hand (it is in Keeper, not in git, because the
-   member list is private):
+## Before you start
 
-   ```yaml
-   curators: [github-name-1, github-name-2]    # may add papers with /ingest
-   index_keepers: []                           # may publish the search index; the owner always may
-   ```
+**1. Send the owner two names:** your GitHub user name, and the e-mail address of your
+Keeper account. The owner invites you. You then get:
 
-   The file only tells the skills what to offer a person (`/ingest` to a curator,
-   `/request-paper` to everyone else). The real lock is Keeper: without a Read-Write share of
-   `astro-kb-data` nobody can add a paper or publish the index. If you do both jobs
-   yourself, leave the two lists empty.
+- an e-mail from GitHub: accept the invitation (only needed while the repository is private);
+- two libraries in Keeper, `astro-kb-data` and `astro-kb-notes`. Log in at
+  <https://keeper.mpdl.mpg.de> and look under "Shared with me". If they are not there, stop
+  and ask the owner.
 
-## Owner: for each new member
+**2. Install five programs.** Skip the ones you have.
 
-Ask the member for their **GitHub user name** and their **Keeper account** (the e-mail
-address they log in to Keeper with). Then:
+| Program | For | Get it from | Check that it works |
+|---|---|---|---|
+| git | fetching the skeleton | macOS: it installs itself the first time you type `git` in a terminal. Linux: your package manager | `git --version` prints a version |
+| Miniforge (conda) | the Python environment | <https://conda-forge.org/download/> | open a **new** terminal; `conda --version` prints a version |
+| Seafile client | syncing the two Keeper libraries | <https://www.seafile.com/en/download/>: the **Desktop Syncing Client**, not "SeaDrive", and the version without Shibboleth | it opens and asks for a server |
+| Obsidian | reading the notes | <https://obsidian.md> | it opens |
+| Claude Code | asking questions | <https://claude.com/claude-code> (the desktop app or the terminal program) | it opens and you are signed in |
 
-1. **GitHub** (only while the repository is private; a public repository needs nothing):
-   Settings → Collaborators → Add people → the GitHub user name, role **Read**. A member
-   with Read can clone and pull. To propose changes with `/share` they need **Write** (to
-   push a branch); `main` stays protected by the rules above.
-2. **Keeper, data:** library `astro-kb-data` → Share → the member's account → **Read-Only**.
-3. **Keeper, notes:** library `astro-kb-notes` → Share → the member's account → **Read-Write**.
-4. **Curator or index keeper?** Two steps, and both are needed:
-   - add their GitHub user name to `curators:` (or `index_keepers:`) in `keeper/roles.yaml`;
-   - change their share of `astro-kb-data` to **Read-Write**: adding a paper or publishing
-     the index writes into that library.
-5. Send them this page.
+Keeper is the Max Planck service; the Seafile client is the program that syncs it. This
+page calls the program "the Seafile client" everywhere.
 
-Removing a member: remove the two Keeper shares and the GitHub collaborator, and take the
-name out of `keeper/roles.yaml`. Their notes stay.
+**3. Sign the Seafile client in to Keeper.** In the client choose "Add an account":
+server `https://keeper.mpdl.mpg.de`, then your Keeper e-mail address and password. You
+should now see the two libraries in the client's list.
 
-## Member: on your machine
+## Step 1. Get the skeleton from GitHub
 
-You need: git, [Miniforge](https://conda-forge.org/download/) (conda), the Keeper desktop
-client, [Obsidian](https://obsidian.md) and Claude Code. About 6 GB of disk: 2 GB for the
-Keeper data, 1.3 GB for the search model, the rest for the Python environment.
+Open a terminal. Go to the folder where the knowledge base should live. Do **not** put it
+inside Dropbox, iCloud, OneDrive or another synced folder: two sync programs on the same
+files make conflicts.
 
-1. **Accept the invitations**: the GitHub invitation (by e-mail, while the repository is
-   private) and the two Keeper shares (they appear under "Shared with me").
-2. **Clone the skeleton:**
+While the repository is private, GitHub must know who you are. The simplest way is
+GitHub's own command-line program:
 
-   ```bash
-   git clone https://github.com/saharsh1/astro-knowledgebase.git
-   ```
+```bash
+conda install -y -c conda-forge gh
+```
 
-3. **Sync the two Keeper libraries into the clone.** In the Keeper desktop client, for each
-   library choose "Sync this library" and set the folder so that the library lands exactly
-   here (create the two empty folders first and use "Sync with an existing folder"):
+```bash
+gh auth login
+```
 
-   | Library | Folder |
-   |---|---|
-   | `astro-kb-data` | `astro-knowledgebase/keeper` |
-   | `astro-kb-notes` | `astro-knowledgebase/live` |
+Answer its questions: `GitHub.com`, `HTTPS`, "Yes" to authenticate git, "Login with a web
+browser". Then:
 
-   Wait until both are synced (about 2 GB). Keeper puts two files of its own at the top of
-   every library (`archive-metadata.md` and `Cared-Data-Certificate-HowTo.pdf`): leave them.
-4. **Run the setup** from the clone. It asks for your GitHub user name once:
+```bash
+gh repo clone saharsh1/astro-knowledgebase
+```
 
-   ```bash
-   bash scripts/setup.sh
-   ```
+(Once the repository is public, or if git on your machine is already signed in to GitHub,
+`git clone https://github.com/saharsh1/astro-knowledgebase.git` does the same.)
 
-   It creates the Python environment `bskb`, writes `scripts/config.local`, installs a
-   check that runs before each commit, downloads the search model (1.3 GB), copies the
-   published search index, and ends with the doctor: one line per check. Every line should
-   say OK. A WARN or FAIL line says what to do; run the setup again after fixing it.
-5. **Open the folder in Obsidian** ("Open folder as vault" → `astro-knowledgebase`). The
-   setup bookmarked the entry pages (the bookmark icon in the left panel): **Home**, the
-   papers index, the lessons index, and one page per arm. Start at Home.
-6. **Open the folder in Claude Code** and approve the search server `astro-kb` when asked.
-   Try: "look up the column ruwe in gaia_source" and "what do we have on astrometric orbits?".
+```bash
+cd astro-knowledgebase
+```
+
+**You should see** a folder `astro-knowledgebase` with `README.md`, `CLAUDE.md`, `scripts/`
+and `docs/` in it. There is no `keeper/` and no `live/` yet. Stay in this folder for the
+rest of the page.
+
+## Step 2. Sync the two Keeper libraries into it
+
+This is the step where things most often go wrong, so check the result before you go on.
+Each library must land **exactly** in its folder, not in a folder inside it.
+
+First make the two empty folders:
+
+```bash
+mkdir keeper live
+```
+
+Then, in the Seafile client, for each library:
+
+1. Right-click the library and choose "Sync this library".
+2. In the window that opens, choose "sync with an existing folder" (a small link in that
+   window), and pick the folder from this table.
+3. Confirm.
+
+| Library | Folder to pick |
+|---|---|
+| `astro-kb-data` | `astro-knowledgebase/keeper` |
+| `astro-kb-notes` | `astro-knowledgebase/live` |
+
+The wording in your version of the client may differ a little. What matters is the result.
+
+Wait until the client shows both libraries as synced. `astro-kb-data` is about 2 GB.
+
+**Check the result:**
+
+```bash
+ls keeper live
+```
+
+**You should see** `pdfs`, `parsed`, `generated`, `index` and `locks` among the names under
+`keeper`, and `papers`, `gaia` and `binary-stars` among those under `live`.
+
+**If you see `keeper/astro-kb-data/` or `live/astro-kb-notes/` instead:** the library went
+one level too deep. In the Seafile client, right-click the library, choose "Unsync", delete
+that inner folder, and do the step again with "sync with an existing folder".
+
+Keeper puts two files of its own at the top of every library (`archive-metadata.md` and
+`Cared-Data-Certificate-HowTo.pdf`). Leave them.
+
+## Step 3. Run the setup
+
+```bash
+bash scripts/setup.sh
+```
+
+It asks one question: your GitHub user name. Then it works alone, in eight numbered steps:
+
+- it creates the Python environment `bskb` (a few minutes);
+- it downloads the search model (1.3 GB, once per machine);
+- it fetches the group's code and copies the published search index;
+- it bookmarks the entry pages in Obsidian;
+- it ends with the **doctor**: a list of checks, one line each.
+
+**You should see** every doctor line start with `OK`, and a last line with `0 FAIL`.
+
+**If a line says WARN or FAIL:** the line itself says what to do. Do it, then run
+`bash scripts/setup.sh` again. It is safe to run as often as you like: it skips what is done.
+
+## Step 4. Open the folder in Obsidian
+
+In Obsidian: "Open folder as vault", and pick `astro-knowledgebase`.
+
+Click the bookmark icon in the left panel. **You should see** eight bookmarks: Home, Papers,
+Lessons, and one per arm (Gaia, Software, Binary stars, Milky Way, Hot stars). Open **Home**:
+it lists the arms, the newest lessons, the papers and the Gaia documentation.
+
+## Step 5. Open the folder in Claude Code
+
+Open `astro-knowledgebase` as the project folder. Claude Code asks once whether to allow the
+search server `astro-kb`: say yes.
+
+Try these two questions:
+
+- "Look up the column ruwe in gaia_source."
+- "What do we have on astrometric orbits?"
+
+**You should see** for the first an answer with the column's type, unit and description, and
+for the second an answer that names papers or documentation sections with their pages. Then
+the installation is complete.
 
 ## Daily use
 
@@ -108,22 +177,32 @@ Keeper data, 1.3 GB for the search model, the rest for the Python environment.
 | a summary of what the knowledge base says on a topic | `/digest <topic>`, then `/publish` |
 | a paper added | `/request-paper <arXiv id or DOI>` |
 | propose a change to scripts, templates or rules | `/share` |
-| settle a Seafile conflict copy | `/resolve` |
+| settle a conflict copy made by the Seafile client | `/resolve` |
 
-Rules that matter from the first day (all of them are in `CLAUDE.md`):
+Four rules matter from the first day. All rules are in `CLAUDE.md`.
 
 - **Public material only.** No unreleased Gaia data, no internal DPAC documents.
 - **Notes reach `live/` only through `/publish`**, which checks them first. Do not save new
-  notes straight into `live/` from Obsidian; write in `outbox/` or let Claude draft there.
+  notes straight into `live/` from Obsidian. Write in `outbox/`, or let Claude draft there.
 - **One writer per note.** Do not edit another member's note; add to its discussion.
 - **Calculations and notebooks go in `sandbox/`**, which is never shared.
 
 ## When something does not work
 
+Run the doctor, from the `astro-knowledgebase` folder:
+
 ```bash
-python scripts/doctor.py
+conda run -n bskb python scripts/doctor.py
 ```
 
-It changes nothing and says, check by check, what is missing: the Python environment, the
-search model, `scripts/config.local`, the two Keeper folders, the code checkouts, the
-search index, and whether the search server answers.
+It changes nothing. It says, check by check, what is missing: the Python environment, the
+search model, the two Keeper folders, the code, the search index, and whether the search
+server answers. Each failing line says how to repair it.
+
+| What you see | Likely cause | Do this |
+|---|---|---|
+| `gh repo clone` says the repository was not found | the GitHub invitation is not accepted yet | accept it (e-mail, or <https://github.com/notifications>), then clone again |
+| `conda: command not found` | the terminal was open before Miniforge was installed | open a new terminal |
+| the doctor says `keeper/` or `live/` is missing, or files are missing | the Seafile client is still downloading, or a library went one level too deep | wait for the sync; else see Step 2 |
+| Claude does not offer the search tools | the server `astro-kb` was not allowed, or the session started before the setup ended | start a new Claude Code session in the folder and allow the server |
+| anything else | | send the owner the doctor's output |

@@ -5,7 +5,7 @@
 #   bash scripts/setup.sh                 # creates or updates the conda environment "bskb"
 #   bash scripts/setup.sh --python PATH   # use an existing Python environment instead
 #
-# Before: clone this repository; in the Seafile app, sync the Keeper library "astro-kb-data"
+# Before: clone this repository; in the Seafile client, sync the Keeper library "astro-kb-data"
 # into ./keeper and "astro-kb-notes" into ./live ("sync with an existing folder").
 # Needs: git, and conda (Miniforge) unless --python is given.
 set -u
@@ -81,8 +81,8 @@ except Exception:
 EOF
 
 step "5. Keeper libraries"
-[ -d keeper ] || echo "keeper/ is missing: in the Seafile app, sync 'astro-kb-data' into $ROOT/keeper"
-[ -d live ]   || echo "live/ is missing: in the Seafile app, sync 'astro-kb-notes' into $ROOT/live"
+[ -d keeper ] || echo "keeper/ is missing: in the Seafile client, sync 'astro-kb-data' into $ROOT/keeper"
+[ -d live ]   || echo "live/ is missing: in the Seafile client, sync 'astro-kb-notes' into $ROOT/live"
 [ -d keeper ] && [ -d live ] && echo "both synced here"
 
 step "6. Code, published index and anything newer (the /sync steps)"

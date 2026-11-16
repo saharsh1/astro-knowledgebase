@@ -103,7 +103,7 @@ def skeleton(offline: bool, apply: bool = True) -> None:
 
 def keeper(full: bool) -> None:
     if not KEEPER.is_dir():
-        say("STOP", "keeper/", "missing: sync the Keeper library 'astro-kb-data' into ./keeper with the Seafile app")
+        say("STOP", "keeper/", "missing: sync the Keeper library 'astro-kb-data' into ./keeper with the Seafile client")
     else:
         missing = differ = 0
         locks = sorted((KEEPER / "locks").rglob("*.json")) if (KEEPER / "locks").exists() else []
@@ -121,11 +121,11 @@ def keeper(full: bool) -> None:
                 differ += 1
         if missing or differ:
             say("WARN", "keeper/", f"{missing} of {len(locks)} locked files missing, {differ} different: "
-                                   "the Seafile app is probably still syncing; sync again later")
+                                   "the Seafile client is probably still syncing; sync again later")
         else:
             say("OK", "keeper/", f"all {len(locks)} locked files present" + (" and identical" if full else " (sizes)"))
     if not LIVE.is_dir():
-        say("STOP", "live/", "missing: sync the Keeper library 'astro-kb-notes' into ./live with the Seafile app")
+        say("STOP", "live/", "missing: sync the Keeper library 'astro-kb-notes' into ./live with the Seafile client")
     else:
         marker = CONV.get("conflict_marker", "SFConflict")
         conflicts = [p for p in LIVE.rglob("*") if marker in p.name]
