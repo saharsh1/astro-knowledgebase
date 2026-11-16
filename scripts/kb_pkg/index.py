@@ -33,7 +33,9 @@ from .store import Store
 CODE_SUFFIXES = {".py", ".ipynb", ".jl"}
 DOCS_TYPES = {"gaia-table", "gaia-section"}          # note types indexed as source_type "docs"
 SKIP_TYPES = {"bibtex"}                              # note types not worth searching
-SKIP_STEMS = re.compile(r" - Bibliography$")         # reference lists of the documentation: names, no content
+# Not indexed: the documentation's reference lists (names, no content) and the generated entry
+# pages of scripts/build/home.py (lists of links).
+SKIP_STEMS = re.compile(r" - Bibliography$|^Home$|^Index - |^Arm - ")
 WIKILINK = re.compile(r"(?<!\!)\[\[([^\]|#]+)")
 DOC_SUFFIXES = {".md", ".rst", ".txt"}
 

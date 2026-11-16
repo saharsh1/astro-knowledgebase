@@ -88,7 +88,10 @@ step "5. Keeper libraries"
 step "6. Code, published index and anything newer (the /sync steps)"
 "$PY" scripts/sync.py
 
-step "7. Check"
+step "7. Obsidian bookmarks (Home, the papers and lessons indexes, the arms)"
+"$PY" scripts/build/home.py --bookmarks
+
+step "8. Check"
 "$PY" scripts/doctor.py
 echo
 echo "Next: open this folder in Obsidian and in Claude Code; approve the 'astro-kb' search server once."
