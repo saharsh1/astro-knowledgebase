@@ -283,7 +283,7 @@ def home_block(v: Vault) -> str:
            "Write your own text above the start marker; the block below is replaced.", "",
            "## Start here", "",
            "| If you want to… | Do this |", "|---|---|",
-           "| install, or add a member | read `docs/install.md` |",
+           "| install on a new machine | read `docs/install.md` |",
            "| start a session up to date | `/sync` in Claude Code |",
            "| ask a question | ask Claude: it searches the papers, the Gaia documentation, the code and the notes |",
            "| record something the group should know | `/lesson`, then `/publish` |",

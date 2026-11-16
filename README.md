@@ -4,7 +4,8 @@ Welcome. This is the shared knowledge base of our group: what we have read, what
 documentation says, what our code does, and what we have learned the hard way, in one place
 that you can read in Obsidian and question with Claude.
 
-**New here? Go to [docs/install.md](docs/install.md).** It takes about 20 minutes.
+**New here? Go to [docs/install.md](docs/install.md).** Your own steps take about 15 minutes;
+the downloads run for about an hour beside them.
 
 ## What you can do with it
 
@@ -74,7 +75,7 @@ The full rules are in [CLAUDE.md](CLAUDE.md); Claude reads them at the start of 
 ## If something does not work
 
 ```bash
-python scripts/doctor.py
+conda run -n bskb python scripts/doctor.py
 ```
 
 It changes nothing and says, line by line, what is missing. If that does not settle it,
@@ -82,7 +83,8 @@ ask the owner.
 
 ## More
 
-- [docs/install.md](docs/install.md): install it, add a member, the roles.
+- [docs/install.md](docs/install.md): install it on your machine, step by step.
+- [docs/owner.md](docs/owner.md): the owner's steps: add a member, the roles.
 - [docs/status.md](docs/status.md): what was built and how it is tested, for maintainers.
 - [docs/design/](docs/design/): the design and the reasons behind it.
 

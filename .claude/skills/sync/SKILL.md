@@ -18,7 +18,7 @@ Run from the repository root with the knowledge base's Python (the `bskb` enviro
    - **STOP skeleton, another branch or local commits on main:** tell the user; offer
      `git switch main` when their branch is already shared. Never reset or delete commits.
    - **STOP keeper/ or live/ missing:** the user syncs that Keeper library with the Seafile
-     app ("sync with an existing folder"). You cannot do it.
+     client ("sync with an existing folder"). You cannot do it.
    - **WARN keeper/, files missing or different:** usually Seafile is still downloading.
      Say so; do not touch `keeper/`.
    - **WARN live/, conflict copies:** offer `/resolve`.
