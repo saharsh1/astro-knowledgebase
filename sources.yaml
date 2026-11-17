@@ -8,6 +8,10 @@ repositories:
     url: https://github.com/saharsh1/orblet
     commit: ac3eeb7590cd   # 2026-10-22
     index: [src, docs, notebooks, README.md]
+  - name: scanlib
+    url: https://github.com/saharsh1/scanlib
+    commit: 0e03d4cf7baa   # 2026-11-16, v0.1.0, MIT
+    index: [src, docs, notebooks, README.md]   # not data/, tests/ or tools/
   - name: SPARTA
     url: https://github.com/SPARTA-dev/SPARTA
     commit: e6ce5f4fa898   # 2026-10-20
