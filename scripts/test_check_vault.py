@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -216,6 +217,16 @@ def main() -> int:
 
         code, out = run(root)
         expect("clean again after removing the bad notes", code == 0, out)
+
+        nfd = unicodedata.normalize("NFD", "Frémat note")    # 'e' + accent, as macOS/Seafile may store it
+        a = live / f"milky-way/notes/{nfd}.md"
+        b = live / "milky-way/notes/Links to it.md"
+        note(a, "title: f\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []")
+        note(b, "title: l\ntype: note\nauthor: bob\ncreated: 2026-11-13\ntags: []", "[[Frémat note]]")
+        code, out = run(root)
+        expect("a link resolves when the file name spells 'é' as 'e' + accent", code == 0, out)
+        a.unlink()
+        b.unlink()
 
         draft = root / "outbox/new.md"
         note(draft, "title: n\ntype: note\nauthor: alice\ncreated: 2026-11-13\ntags: [Gaia]")
