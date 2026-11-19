@@ -17,6 +17,7 @@ import hashlib
 import json
 import re
 import sys
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -48,10 +49,16 @@ def as_list(v) -> list:
     return v if isinstance(v, list) else [v]
 
 
+def nfc(s: str) -> str:
+    """One Unicode form for names and links: macOS and Seafile may store 'é' in a file name as
+    'e' + accent (NFD) while the link holds the single character (NFC); Obsidian treats them alike."""
+    return unicodedata.normalize("NFC", s)
+
+
 def link_target(v) -> str | None:
     """'[[Title]]' or '[[Title|alias]]' -> 'Title'; anything else -> None."""
     m = WIKILINK.fullmatch(str(v).strip())
-    return m.group(1).strip() if m else None
+    return nfc(m.group(1).strip()) if m else None
 
 
 class Vault:
@@ -142,7 +149,7 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                pending: frozenset = frozenset()) -> dict | None:
     """stems: file stem -> arm of every note (None for shared and generated notes)."""
     conv = v.conv
-    stem = path.stem
+    stem = nfc(path.stem)
     if conv["conflict_marker"] in path.name:
         errors.append(f"{rel}: Seafile conflict copy; keep one version (/resolve) and delete the other")
         return None
@@ -211,7 +218,7 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                 warnings.append(f"{rel}: contains '{marker}' — check it is not from an internal (non-public) document")
 
     body = COMMENT.sub("", FENCE.sub("", text))
-    targets += [t.strip().rstrip("\\") for t in WIKILINK.findall(body)]   # [[a\|b]] inside a table
+    targets += [nfc(t.strip().rstrip("\\")) for t in WIKILINK.findall(body)]   # [[a\|b]] inside a table
     if arm and place != "generated":                # links run down the layers: science -> software -> gaia
         for target in sorted(set(targets)):
             other = stems.get(target)
@@ -220,7 +227,7 @@ def check_note(v: Vault, path: Path, rel: str, text: str, place_path: Path,
                               f"(layer {v.layer(other)}); links run from higher layers to lower ones only, "
                               f"so put this link in a note of {other}")
     for target in WIKILINK.findall(body):
-        target = target.strip().rstrip("\\")
+        target = nfc(target.strip().rstrip("\\"))
         if ATTACHMENT.search(target) or target in stems:
             continue
         if target in pending:
@@ -254,7 +261,7 @@ def main() -> int:
         warnings.append(f"arms not synced on this machine: {', '.join(missing)} (links into them are warnings)")
     by_stem: dict[str, list[Path]] = defaultdict(list)
     for p in notes:
-        by_stem[p.stem].append(p)
+        by_stem[nfc(p.stem)].append(p)
     stems = {s: v.place(ps[0])[0] for s, ps in by_stem.items()}
 
     if args.draft:                                   # one draft, checked at its destination
@@ -264,13 +271,13 @@ def main() -> int:
         rel = f"{args.draft} (as {args.dest})"
         if dest.exists():
             errors.append(f"{rel}: {args.dest} exists already — never overwrite a note (one writer per file)")
-        elif dest.stem in stems:
+        elif nfc(dest.stem) in stems:
             errors.append(f"{rel}: a note named '{dest.stem}' exists already "
-                          f"({by_stem[dest.stem][0].relative_to(ROOT)})")
+                          f"({by_stem[nfc(dest.stem)][0].relative_to(ROOT)})")
         outbox = ROOT / conv["outbox_dir"]
-        pending = frozenset(p.stem for p in outbox.rglob("*.md")) if outbox.exists() else frozenset()
+        pending = frozenset(nfc(p.stem) for p in outbox.rglob("*.md")) if outbox.exists() else frozenset()
         check_note(v, dest, rel, (ROOT / args.draft).read_text(encoding="utf-8"), dest,
-                   {**stems, dest.stem: v.place(dest)[0]}, not missing, errors, warnings, pending)
+                   {**stems, nfc(dest.stem): v.place(dest)[0]}, not missing, errors, warnings, pending)
         checked = 1
     else:
         for stem, paths in by_stem.items():
